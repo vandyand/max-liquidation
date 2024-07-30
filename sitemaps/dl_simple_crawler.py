@@ -2,8 +2,6 @@ import requests
 from db import insert_url, fetch_tree, create_connection
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-# import time
-# import random
 
 class URLNode:
     def __init__(self, url):
@@ -35,26 +33,8 @@ class SimpleCrawler:
             node.id = self.insert_url_and_get_id(node.url, None, depth)
             self.visited.add(node.url)
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Referer': 'https://www.google.com/',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1'
-        }
-        
-        try:
-            response = requests.get(node.url, headers=headers, timeout=5)  # Set a timeout
-            response.raise_for_status()  # Raise an error for bad responses
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching {node.url}: {e}")
-            return
-        
+        response = requests.get(node.url)
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # time.sleep(random.uniform(0.5, 1.5))  # Delay for some seconds
 
         # Find all links on the page
         for link in soup.find_all('a', href=True):
