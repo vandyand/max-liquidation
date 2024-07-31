@@ -61,6 +61,7 @@ if __name__ == '__main__':
         conn = create_connection('sitemaps/big_liq_urls.db')
         records = get_all(conn)
         filtered_records = [record for record in records if 'csv_manifest' in record[1]]
+        # filtered_records = [record for record in records if 'auction/view?id=' in record[1] and '#' not in record[1]]
         
         if filtered_records:
             for record in filtered_records:

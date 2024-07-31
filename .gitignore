@@ -1,5 +1,3 @@
 __pycache__
-/sitemaps/*.db
-/csvs
-standardized_data.csv
+*.csv
 *.db
