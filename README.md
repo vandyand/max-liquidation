@@ -53,7 +53,7 @@ This project is a web scraper designed to gather data from liquidation websites,
    python get_liquidation_csvs.py
    ```
 
-5. **Ingest the CSV data and output the `standardized_data.csv` file:**
+5. **Ingest the CSV data and output the `items_data.csv` file:**
 
    ```sh
    python stan_dat_ingest.py
@@ -78,11 +78,11 @@ This project is a web scraper designed to gather data from liquidation websites,
 
 ## Future Enhancements
 
-1. **Associate auction data in `auction_data.csv` with auction item data in `standardized_data.csv`.**
+1. **Associate auction data in `auction_data.csv` with auction item data in `items_data.csv`.**
 
 2. **Search eBay for each item to get eBay selling demand data and output another CSV.**
 
-3. **Rename `standardized_data.csv` to a more appropriate name.**
+3. **Rename `items_data.csv` to a more appropriate name.**
 
 4. **Use SQLite instead of CSV files for data persistence. Create a standardized database with multiple tables.**
 

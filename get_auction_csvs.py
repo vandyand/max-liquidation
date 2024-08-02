@@ -31,25 +31,20 @@ def fetch_auction_data(driver, auction_id):
         return None
     
     page_content = driver.page_source
-    # print("page_content", page_content[:250])
     soup = BeautifulSoup(page_content, 'html.parser')
     
     auction_data_element = soup.find(id="auctionData").get_text()
-    # print("auction_data_element:", auction_data_element)
-
     description_table = soup.find(id="description_table").get_text()
-    # print("description_table:", description_table)
-
     shipping_table = soup.find(id="shipping_table").get_text()
-    # print("shipping_table:", shipping_table)
 
+    print(f"Formatting data for auction ID {auction_id}")
     auction_data = openai_returns_formatted_auction_data(auction_data_element, description_table, shipping_table)
     
     return auction_data
 
 def main():
-    # Read auction IDs from standardized_data.csv
-    df = pd.read_csv("standardized_data.csv", low_memory=False)
+    # Read auction IDs from items_data.csv
+    df = pd.read_csv("items_data.csv", low_memory=False)
     auction_ids = df['auction_id'].unique()
     
     driver = setup_driver()
@@ -60,18 +55,21 @@ def main():
         auction_data_df = pd.read_csv(output_file)
     else:
         auction_data_df = pd.DataFrame(columns=[
-            "auction_id", "title", "description", "time_left", "buy_now_price", "views", "bids", "bidders", "watching",
+            "id", "auction_id", "title", "description", "time_left", "buy_now_price", "views", "bids", "bidders", "watching",
             "location", "seller", "condition", "shipping_terms", "shipping_estimate", "total_weight", "quantity_in_lot",
             "buyers_premium", "auction_type", "minimum_shipping_fee"
         ])
     
     try:
+        next_id = auction_data_df['id'].max() + 1 if not auction_data_df.empty else 1
+        
         for auction_id in auction_ids:
             print(f"Fetching data for auction ID {auction_id}")
             auction_data = fetch_auction_data(driver, auction_id)
             
             if auction_data:
-                print(f"Saving data for auction ID {auction_id}")
+                auction_data['id'] = next_id
+                next_id += 1
                 auction_data_df = pd.concat([auction_data_df, pd.DataFrame([auction_data])], ignore_index=True)
                 auction_data_df.to_csv(output_file, index=False)
     finally:

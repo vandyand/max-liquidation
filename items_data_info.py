@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the CSV file into a DataFrame
-df = pd.read_csv('standardized_data.csv')
+df = pd.read_csv('items_data.csv')
 
 # Display basic information about the DataFrame
 print("DataFrame Info:")

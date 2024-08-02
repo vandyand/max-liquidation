@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the standardized data CSV file into a DataFrame
-df = pd.read_csv('standardized_data.csv')
+df = pd.read_csv('items_data.csv')
 
 # Define the columns to be concatenated
 columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC"]
@@ -14,4 +14,4 @@ def create_search_string(row):
 df['search'] = df.apply(create_search_string, axis=1)
 
 # Save the updated DataFrame back to the CSV file
-df.to_csv('standardized_data.csv', index=False)
+df.to_csv('items_data.csv', index=False)

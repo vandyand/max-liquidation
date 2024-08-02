@@ -48,6 +48,6 @@ if normalized_dataframes:
     final_df.insert(0, 'id', range(1, len(final_df) + 1))
     
     # Save the standardized data to a new CSV file
-    final_df.to_csv("standardized_data.csv", index=False)
+    final_df.to_csv("items_data.csv", index=False)
 else:
     print("No data to save.")
