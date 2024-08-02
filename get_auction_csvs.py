@@ -33,13 +33,17 @@ def fetch_auction_data(driver, auction_id):
     page_content = driver.page_source
     soup = BeautifulSoup(page_content, 'html.parser')
     
-    auction_data_element = soup.find(id="auctionData").get_text()
-    description_table = soup.find(id="description_table").get_text()
-    shipping_table = soup.find(id="shipping_table").get_text()
+    try:
+        auction_data_element = soup.find(id="auctionData").get_text()
+        description_table = soup.find(id="description_table").get_text()
+        shipping_table = soup.find(id="shipping_table").get_text()
+    except AttributeError as e:
+        print(f"Error processing auction ID {auction_id}: {e}")
+        return None
 
     print(f"Formatting data for auction ID {auction_id}")
     auction_data = openai_returns_formatted_auction_data(auction_data_element, description_table, shipping_table)
-    
+
     return auction_data
 
 def main():
@@ -61,6 +65,10 @@ def main():
         ])
     
     try:
+        # Ensure 'id' column exists
+        if 'id' not in auction_data_df.columns:
+            auction_data_df['id'] = pd.Series(dtype='int')
+        
         next_id = auction_data_df['id'].max() + 1 if not auction_data_df.empty else 1
         
         for auction_id in auction_ids:
@@ -76,4 +84,7 @@ def main():
         driver.quit()
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Process interrupted by user.")
