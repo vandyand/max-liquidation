@@ -1,3 +1,33 @@
+ebay_demand_schema = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "item_name": {
+                "type": "string",
+                "description": "Name of the item"
+            },
+            "item_price": {
+                "type": "string",
+                "description": "Price of the item"
+            },
+            "item_condition": {
+                "type": "string",
+                "description": "Condition of the item (brand new, used, open box, etc.)"
+            },
+            "item_url": {
+                "type": "string",
+                "description": "URL of the item found in href of 's-item__link' <a> tag"
+            },
+            "item_sold_date": {
+                "type": "string",
+                "description": "Date when the item was sold"
+            }
+        },
+        "required": ["item_name", "item_price", "item_condition", "item_url", "item_sold_date"]
+    }
+}
+
 auction_schema = {
     "type": "object",
     "properties": {
