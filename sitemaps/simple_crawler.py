@@ -111,8 +111,8 @@ class SimpleCrawler:
             self.conn.close()
 
 if __name__ == '__main__':
-    # start_url = 'https://www.liquidation.com/'
-    start_url = 'https://www.directliquidation.com/'
+    start_url = 'https://www.liquidation.com/'
+    # start_url = 'https://www.directliquidation.com/'
     crawler = SimpleCrawler(start_url)
     try:
         crawler.crawl()  # Start crawling

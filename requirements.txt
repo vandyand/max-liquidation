@@ -1,0 +1,5 @@
+selenium
+beautifulsoup4
+pandas
+sqlite3
+glob2
