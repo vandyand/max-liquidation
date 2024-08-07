@@ -11,6 +11,7 @@ import random
 import signal
 import sys
 import os
+import heapq
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db.db_utils import create_crud_functions, create_connection
 
@@ -22,6 +23,10 @@ class URLNode:
 
     def add_child(self, child_node):
         self.children.append(child_node)
+
+    def __lt__(self, other):
+        # This method is required for heapq to compare URLNode instances
+        return self.url < other.url
 
 class SimpleCrawler:
     def __init__(self, start_url, max_depth=7):
@@ -53,10 +58,12 @@ class SimpleCrawler:
             return None
 
     def crawl(self):
-        queue = deque([(self.root, 0)])  # Initialize the queue with the root node and depth 0
+        # Initialize the priority queue with the root node and depth 0
+        queue = []
+        heapq.heappush(queue, (0, self.root, 0))  # (priority, node, depth)
 
         while queue:
-            node, depth = queue.popleft()
+            priority, node, depth = heapq.heappop(queue)
 
             if depth > self.max_depth:
                 continue
@@ -79,6 +86,11 @@ class SimpleCrawler:
                     EC.presence_of_element_located((By.TAG_NAME, 'a'))
                 )
                 signal.alarm(0)  # Cancel the alarm if the page loads successfully
+            except TimeoutError:
+                print(f"Timeout while loading {node.url}. Closing page and moving to next URL.")
+                self.driver.execute_script("window.stop();")  # Force stop the page load
+                signal.alarm(0)  # Cancel the alarm
+                continue
             except Exception as e:
                 print(f"Error waiting for links on {node.url}: {e}")
                 signal.alarm(0)  # Cancel the alarm in case of other exceptions
@@ -95,7 +107,7 @@ class SimpleCrawler:
                     continue  # Skip problematic links
 
                 # Skip invalid URLs and image files
-                if child_url.startswith('#') or child_url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '#')):
+                if child_url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp')):
                     continue
 
                 # Resolve relative URLs
@@ -106,8 +118,18 @@ class SimpleCrawler:
                     # Insert child URL with current node ID as parent_id
                     child_node.id = self.insert_url_and_get_id(child_node.url, node.id, depth + 1)
 
-                    # Add the child node to the queue with incremented depth
-                    queue.append((child_node, depth + 1))
+                    # Determine priority: higher priority for URLs containing 'auction', lower for '#'
+                    if 'auction/view?' in child_url and '#' not in child_url:
+                        priority = 0
+                    elif 'auction/search?' in child_url and '#' not in child_url:
+                        priority = 1
+                    elif '#' in child_url:
+                        priority = 3
+                    else:
+                        priority = 2
+
+                    # Add the child node to the priority queue with incremented depth
+                    heapq.heappush(queue, (priority, child_node, depth + 1))
 
     def close_driver(self):
         self.driver.quit()  # Close the Selenium WebDriver
