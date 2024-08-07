@@ -47,7 +47,7 @@ class SimpleCrawler:
     def insert_url_and_get_id(self, url, parent_id, depth):
         """Helper method to insert URL into the database and return its ID."""
         data = {'url': url, 'parent_id': parent_id, 'depth': depth}
-        return self.sitemap_crud['insert'](data, self.conn)
+        return self.sitemap_crud['insert_or_ignore'](data, self.conn)
 
     def get_link_href(self, link):
         """Helper method to get the href attribute of a link and skip if it causes issues."""

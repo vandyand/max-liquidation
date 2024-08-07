@@ -11,6 +11,37 @@ def create_crud_functions(table_name):
     
     def insert(data, conn=None):
         conn_flag = False
+        
+        if conn is None:
+            conn = create_connection()
+            conn_flag = True
+
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['?' for _ in data])
+        sql_insert = f'''
+        INSERT INTO {table_name}({columns})
+        VALUES({placeholders});
+        '''
+        
+        try:
+            cur = conn.cursor()
+            cur.execute(sql_insert, tuple(data.values()))
+            conn.commit()
+            lastrowid = cur.lastrowid
+            return lastrowid
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity error: {e}")
+            raise
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return None
+        finally:
+            if conn_flag:
+                conn.close()
+    
+    def insert_or_ignore(data, conn=None):
+        conn_flag = False
+        
         if conn is None:
             conn = create_connection()
             conn_flag = True
@@ -21,11 +52,16 @@ def create_crud_functions(table_name):
         INSERT OR IGNORE INTO {table_name}({columns})
         VALUES({placeholders});
         '''
+        
         try:
             cur = conn.cursor()
             cur.execute(sql_insert, tuple(data.values()))
             conn.commit()
-            return cur.lastrowid
+            lastrowid = cur.lastrowid
+            return lastrowid
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity error: {e}")
+            raise
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             return None
@@ -75,6 +111,29 @@ def create_crud_functions(table_name):
             if conn_flag:
                 conn.close()
 
+    def get_by_column(column_name, value, conn=None):
+        conn_flag = False
+        
+        if conn is None:
+            conn = create_connection()
+            conn_flag = True
+
+        sql = f'''
+        SELECT * FROM {table_name} WHERE {column_name} = ?;
+        '''
+        
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, (value,))
+            row = cur.fetchone()
+            return row
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return None
+        finally:
+            if conn_flag:
+                conn.close()
+
     def update(record_id, data, conn=None):
         conn_flag = False
         if conn is None:
@@ -91,7 +150,8 @@ def create_crud_functions(table_name):
             cur = conn.cursor()
             cur.execute(sql_update, tuple(data.values()) + (record_id,))
             conn.commit()
-            return cur.rowcount
+            rowcount = cur.rowcount
+            return rowcount
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             return None
@@ -112,7 +172,8 @@ def create_crud_functions(table_name):
             cur = conn.cursor()
             cur.execute(sql_delete, (record_id,))
             conn.commit()
-            return cur.rowcount
+            rowcount = cur.rowcount
+            return rowcount
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             return None
@@ -122,8 +183,10 @@ def create_crud_functions(table_name):
 
     return {
         'insert': insert,
+        'insert_or_ignore': insert_or_ignore,
         'get_all': get_all,
         'get_by_id': get_by_id,
+        'get_by_column': get_by_column,
         'update': update,
         'delete': delete
     }
@@ -139,16 +202,3 @@ def delete_database(test=False):
             print(f"Error deleting database {db_file}: {e}")
     else:
         print(f"Database {db_file} does not exist.")
-
-# # Example usage:
-# sitemap_crud = create_crud_functions('sitemap_data')
-# auction_crud = create_crud_functions('auction_data')
-# items_crud = create_crud_functions('items_data')
-# ebay_demand_crud = create_crud_functions('ebay_demand_data')
-
-# # Now you can use the CRUD functions like this:
-# sitemap_crud['insert']({'url': 'http://example.com', 'parent_id': 1, 'depth': 2})
-# sitemap_crud['get_all']()
-# sitemap_crud['get_by_id'](1)
-# sitemap_crud['update'](1, {'url': 'http://newexample.com'})
-# sitemap_crud['delete'](1)

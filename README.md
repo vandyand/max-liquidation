@@ -21,7 +21,7 @@ This project is a web scraper designed to gather data from liquidation websites,
 
 2. **Install the required Python packages:**
    ```sh
-   pip install -r requirements.txt
+   source setup_env.sh
    ```
 
 ## Running the Codebase

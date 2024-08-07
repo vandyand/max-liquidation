@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the src directory to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
 import json
 from openai import OpenAI
 from openai_schemas import auction_schema, ebay_demand_schema

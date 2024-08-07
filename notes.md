@@ -10,3 +10,4 @@ Create easy to use web ui
 
 Dev notes:
 Refactoring db to to include all relevant data
+Somehow cache site_mapper crawl method

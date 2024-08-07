@@ -11,11 +11,13 @@ CREATE TABLE IF NOT EXISTS sitemap_data (
 auction_data_table_schema = '''
 CREATE TABLE IF NOT EXISTS auction_data (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sitemap_url INTEGER NOT NULL,
     auction_id TEXT UNIQUE,
     title TEXT,
     description TEXT,
     time_left TEXT,
-    buy_now_price TEXT,
+    stated_msrp REAL,
+    buy_now_price REAL,
     views INTEGER,
     bids INTEGER,
     bidders INTEGER,
@@ -29,9 +31,11 @@ CREATE TABLE IF NOT EXISTS auction_data (
     quantity_in_lot INTEGER,
     buyers_premium REAL,
     auction_type TEXT,
-    minimum_shipping_fee REAL
+    minimum_shipping_fee REAL,
+    FOREIGN KEY (sitemap_url) REFERENCES sitemap_data(url)
 );
 '''
+
 items_data_table_schema = '''
 CREATE TABLE IF NOT EXISTS items_data (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

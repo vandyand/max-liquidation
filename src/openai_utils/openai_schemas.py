@@ -47,9 +47,13 @@ auction_schema = {
             "type": "string",
             "description": "Time left for the auction to end"
         },
+        "stated_msrp": {
+            "type": "real",
+            "description": "Stated MSRP of the auction. Of form 123.45 representing USD amount"
+        },
         "buy_now_price": {
-            "type": "string",
-            "description": "Buy now price of the auction"
+            "type": "real",
+            "description": "Buy now price of the auction. Of form 123.45 representing USD amount"
         },
         "views": {
             "type": "integer",
