@@ -1,7 +1,13 @@
+import sys
+import os
+
+# Add the src directory to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
 import unittest
 import os
 from db_init import create_tables
-from db import create_crud_functions
+from db_utils import create_crud_functions, delete_database
 
 class TestCRUDOperations(unittest.TestCase):
 
@@ -12,6 +18,10 @@ class TestCRUDOperations(unittest.TestCase):
         
         # Create tables in the test database
         create_tables()
+    
+    @classmethod
+    def tearDownClass(cls):
+        delete_database(test=True)
 
     def setUp(self):
         self.sitemap_crud = create_crud_functions('sitemap_data')
@@ -66,14 +76,19 @@ class TestCRUDOperations(unittest.TestCase):
         self.assertEqual(rows_deleted, 1)
 
     def test_items_crud(self):
+        # Ensure auction_id exists in auction_data
+        auction_record = {'auction_id': '12345', 'title': 'Test Auction'}
+        auction_id = self.auction_crud['insert'](auction_record)
+        self.assertIsNotNone(auction_id)
+
         # Insert
-        new_record = {'item_id': 1, 'product_code': 'ABC123'}
+        new_record = {'auction_id': '12345', 'item_id': 1, 'product_code': 'ABC123'}
         record_id = self.items_crud['insert'](new_record)
         self.assertIsNotNone(record_id)
 
         # Get by ID
         record = self.items_crud['get_by_id'](record_id)
-        self.assertEqual(record[1], new_record['item_id'])
+        self.assertEqual(record[2], new_record['item_id'])  # Adjusted index to match item_id position
 
         # Update
         updated_record = {'product_code': 'XYZ789'}
@@ -86,6 +101,10 @@ class TestCRUDOperations(unittest.TestCase):
 
         # Delete
         rows_deleted = self.items_crud['delete'](record_id)
+        self.assertEqual(rows_deleted, 1)
+
+        # Delete the auction record
+        rows_deleted = self.auction_crud['delete'](auction_id)
         self.assertEqual(rows_deleted, 1)
 
     def test_ebay_demand_crud(self):

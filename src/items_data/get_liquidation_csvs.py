@@ -1,4 +1,4 @@
-from db.db import create_connection, get_all
+from db.db_utils import create_connection, get_all
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options

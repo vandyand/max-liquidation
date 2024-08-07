@@ -1,5 +1,10 @@
-import sqlite3
+import sys
 import os
+
+# Add the src directory to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
+import sqlite3
 from dotenv import load_dotenv
 from db_table_schemas import sitemap_table_schema, auction_data_table_schema, items_data_table_schema, ebay_demand_data_table_schema, sql_drop_tables
 

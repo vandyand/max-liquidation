@@ -8,14 +8,17 @@ from selenium.common.exceptions import StaleElementReferenceException
 from collections import deque
 import time
 import random
-from db.db import insert_url, create_connection  # Import the necessary functions
 import signal
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from db.db_utils import create_crud_functions, create_connection
 
 class URLNode:
     def __init__(self, url):
         self.url = url
         self.children = []
-        self.id = None  # You can set this to whatever ID you need
+        self.id = None
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -26,7 +29,10 @@ class SimpleCrawler:
         self.max_depth = max_depth
         self.visited = set()  # To keep track of visited URLs
         self.root = URLNode(start_url)
-        self.conn = create_connection('db.db')  # Open connection once
+        self.conn = create_connection()  # Open connection once
+
+        # Create CRUD functions for the sitemap_data table
+        self.sitemap_crud = create_crud_functions('sitemap_data')
 
         # Set up Selenium WebDriver
         chrome_options = Options()
@@ -35,7 +41,8 @@ class SimpleCrawler:
 
     def insert_url_and_get_id(self, url, parent_id, depth):
         """Helper method to insert URL into the database and return its ID."""
-        return insert_url(url, parent_id, depth, self.conn)
+        data = {'url': url, 'parent_id': parent_id, 'depth': depth}
+        return self.sitemap_crud['insert'](data, self.conn)
 
     def get_link_href(self, link):
         """Helper method to get the href attribute of a link and skip if it causes issues."""
@@ -102,11 +109,10 @@ class SimpleCrawler:
                     # Add the child node to the queue with incremented depth
                     queue.append((child_node, depth + 1))
 
-
     def close_driver(self):
         self.driver.quit()  # Close the Selenium WebDriver
 
-    def close_connection(self):
+    def close_db_connection(self):
         if self.conn:
             self.conn.close()
 
@@ -120,4 +126,4 @@ if __name__ == '__main__':
         print("Crawling interrupted by user.")
     finally:
         crawler.close_driver()  # Close the Selenium driver
-        crawler.close_connection()  # Close the connection when done
+        crawler.close_db_connection()  # Close the connection when done

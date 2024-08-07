@@ -1,13 +1,19 @@
+import sys
+import os
+
+# Add the src directory to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
 import sqlite3
 from db_init import create_connection
 
 def create_crud_functions(table_name):
     
-    def insert(data):
-        conn = create_connection()
+    def insert(data, conn=None):
+        conn_flag = False
         if conn is None:
-            print("Error: Database connection is not established.")
-            return None
+            conn = create_connection()
+            conn_flag = True
 
         columns = ', '.join(data.keys())
         placeholders = ', '.join(['?' for _ in data])
@@ -24,13 +30,14 @@ def create_crud_functions(table_name):
             print(f"Database error: {e}")
             return None
         finally:
-            conn.close()
+            if conn_flag:
+                conn.close()
 
-    def get_all():
-        conn = create_connection()
+    def get_all(conn=None):
+        conn_flag = False
         if conn is None:
-            print("Error: Database connection is not established.")
-            return None
+            conn = create_connection()
+            conn_flag = True
 
         sql = f'''
         SELECT * FROM {table_name};
@@ -44,13 +51,14 @@ def create_crud_functions(table_name):
             print(f"Database error: {e}")
             return None
         finally:
-            conn.close()
+            if conn_flag:
+                conn.close()
 
-    def get_by_id(record_id):
-        conn = create_connection()
+    def get_by_id(record_id, conn=None):
+        conn_flag = False
         if conn is None:
-            print("Error: Database connection is not established.")
-            return None
+            conn = create_connection()
+            conn_flag = True
 
         sql = f'''
         SELECT * FROM {table_name} WHERE id = ?;
@@ -64,13 +72,14 @@ def create_crud_functions(table_name):
             print(f"Database error: {e}")
             return None
         finally:
-            conn.close()
+            if conn_flag:
+                conn.close()
 
-    def update(record_id, data):
-        conn = create_connection()
+    def update(record_id, data, conn=None):
+        conn_flag = False
         if conn is None:
-            print("Error: Database connection is not established.")
-            return None
+            conn = create_connection()
+            conn_flag = True
 
         columns = ', '.join([f"{key} = ?" for key in data.keys()])
         sql_update = f'''
@@ -87,13 +96,14 @@ def create_crud_functions(table_name):
             print(f"Database error: {e}")
             return None
         finally:
-            conn.close()
+            if conn_flag:
+                conn.close()
 
-    def delete(record_id):
-        conn = create_connection()
+    def delete(record_id, conn=None):
+        conn_flag = False
         if conn is None:
-            print("Error: Database connection is not established.")
-            return None
+            conn = create_connection()
+            conn_flag = True
 
         sql_delete = f'''
         DELETE FROM {table_name} WHERE id = ?;
@@ -107,7 +117,8 @@ def create_crud_functions(table_name):
             print(f"Database error: {e}")
             return None
         finally:
-            conn.close()
+            if conn_flag:
+                conn.close()
 
     return {
         'insert': insert,
@@ -116,6 +127,18 @@ def create_crud_functions(table_name):
         'update': update,
         'delete': delete
     }
+
+def delete_database(test=False):
+    db_file = os.getenv('TEST_DB_PATH') if test else os.getenv('DB_PATH')
+    
+    if os.path.exists(db_file):
+        try:
+            os.remove(db_file)
+            print(f"Database {db_file} deleted successfully.")
+        except OSError as e:
+            print(f"Error deleting database {db_file}: {e}")
+    else:
+        print(f"Database {db_file} does not exist.")
 
 # # Example usage:
 # sitemap_crud = create_crud_functions('sitemap_data')
