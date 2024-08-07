@@ -1,4 +1,4 @@
-from sitemaps.db import create_connection, get_all
+from db.db import create_connection, get_all
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -58,7 +58,7 @@ os.makedirs('csvs', exist_ok=True)
 if __name__ == '__main__':
     driver = setup_driver()
     try:
-        conn = create_connection('sitemaps/big_liq_urls.db')
+        conn = create_connection(os.getenv('DB_PATH'))
         records = get_all(conn)
         filtered_records = [record for record in records if 'csv_manifest' in record[1]]
         # filtered_records = [record for record in records if 'auction/view?id=' in record[1] and '#' not in record[1]]

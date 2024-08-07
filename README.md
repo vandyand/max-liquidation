@@ -15,8 +15,8 @@ This project is a web scraper designed to gather data from liquidation websites,
 1. **Clone the repository:**
 
    ```sh
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone https://github.com/vandyand/max-liquidation.git
+   cd max-liquidation
    ```
 
 2. **Install the required Python packages:**
@@ -32,7 +32,7 @@ This project is a web scraper designed to gather data from liquidation websites,
 
    ```sh
    cd sitemaps
-   python db-init.py
+   python db_init.py
    ```
 
 2. **Run the simple crawler to gather URLs:**

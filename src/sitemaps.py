@@ -8,7 +8,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from collections import deque
 import time
 import random
-from db import insert_url, create_connection  # Import the necessary functions
+from db.db import insert_url, create_connection  # Import the necessary functions
 import signal
 
 class URLNode:
@@ -26,7 +26,7 @@ class SimpleCrawler:
         self.max_depth = max_depth
         self.visited = set()  # To keep track of visited URLs
         self.root = URLNode(start_url)
-        self.conn = create_connection('urls.db')  # Open connection once
+        self.conn = create_connection('db.db')  # Open connection once
 
         # Set up Selenium WebDriver
         chrome_options = Options()
