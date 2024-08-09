@@ -60,7 +60,11 @@ def fetch_auction_data(auction_url):
         print(f"Cache hit for auction url {auction_url}")
         return cache[auction_url]
 
-    auction_data_element, description_table, shipping_table = get_relevant_auction_elements(auction_url)
+    try:
+        auction_data_element, description_table, shipping_table = get_relevant_auction_elements(auction_url)
+    except Exception as e:
+        print(f"Error fetching auction data for auction url {auction_url}: {e}")
+        return None
 
     print(f"Formatting data for auction url {auction_url}")
     auction_data = openai_returns_formatted_auction_data(auction_data_element, description_table, shipping_table)
