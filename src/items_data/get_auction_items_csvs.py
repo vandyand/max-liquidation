@@ -1,9 +1,16 @@
-from db.db_utils import create_connection, get_all
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import os
 import time
+from db.db_utils import create_crud_functions, create_connection
+
+download_dir = os.path.join(os.path.dirname(__file__), 'csvs')
 
 def setup_driver():
     chrome_options = Options()
@@ -11,67 +18,76 @@ def setup_driver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    download_dir = os.path.abspath('csvs')
+    
     chrome_options.add_experimental_option("prefs", {
         "download.default_directory": download_dir,  # Set download directory
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True
     })
+    
     driver = webdriver.Chrome(service=Service('/opt/homebrew/bin/chromedriver'), options=chrome_options)
     print(f"Download directory set to: {download_dir}")
+    
     return driver
 
-def wait_for_downloads(download_dir, timeout=30):
+def wait_for_downloads(timeout=30):
     seconds = 0
     dl_wait = True
+    
     while dl_wait and seconds < timeout:
-        print(f"Waiting for downloads to complete: {seconds} seconds")
         dl_wait = False
+        
         for fname in os.listdir(download_dir):
             if fname.endswith('.crdownload'):
                 dl_wait = True
+        
         seconds += 1
         time.sleep(0.25)
+    
     return not dl_wait
 
-def download_file(driver, url, download_dir):
-    print(f"Downloading {url}")
+def download_file(driver, url):
     try:
         driver.get(url)
         
         # Wait for the download to complete
-        if wait_for_downloads(download_dir):
+        if wait_for_downloads():
             print(f"Downloaded {url}")
-            # Check if the file exists in the download directory
-            downloaded_files = os.listdir(download_dir)
-            print(f"Files in download directory: {downloaded_files}")
         else:
             print(f"Download timed out for {url}")
     except Exception as e:
         print(f"Error downloading {url}: {e}")
 
 # Ensure the 'csvs' directory exists
-os.makedirs('csvs', exist_ok=True)
+os.makedirs(download_dir, exist_ok=True)
 
 # Download each csv_manifest file
-if __name__ == '__main__':
+def main():
     driver = setup_driver()
+    
     try:
-        conn = create_connection(os.getenv('DB_PATH'))
-        records = get_all(conn)
-        filtered_records = [record for record in records if 'csv_manifest' in record[1]]
-        # filtered_records = [record for record in records if 'auction/view?id=' in record[1] and '#' not in record[1]]
+        conn = create_connection()
+        auction_crud = create_crud_functions('auction_data')
         
-        if filtered_records:
-            for record in filtered_records:
-                url = record[1]
-                download_file(driver, url, 'csvs')
+        records = auction_crud['get_all'](conn)
+        
+        if records:
+            for record in records:
+                auction_id = record[2]
+                url = f'https://www.liquidation.com/auction/csv_manifest?auctionId={auction_id}'
+                download_file(driver, url)
+                time.sleep(0.1)
+                
         else:
-            print("No csv_manifest URLs found.")
+            print("No auction records found.")
     except KeyboardInterrupt:
         print("Download interrupted by user.")
     finally:
         driver.quit()
+        
         if conn:
             conn.close()
+
+if __name__ == '__main__':
+    main()

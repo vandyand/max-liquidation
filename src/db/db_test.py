@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 # Add the src directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
@@ -93,6 +94,7 @@ class TestCRUDOperations(unittest.TestCase):
         rows_deleted = self.auction_crud['delete'](record_id)
         self.assertEqual(rows_deleted, 1)
 
+
     def test_items_crud(self):
         # Ensure auction_id exists in auction_data
         sitemap_record = {'url': 'http://example.com', 'parent_id': None, 'depth': 2}
@@ -104,22 +106,22 @@ class TestCRUDOperations(unittest.TestCase):
         self.assertIsNotNone(auction_id, "Failed to insert auction record")
 
         # Insert
-        new_record = {'auction_id': '12345', 'item_id': 1, 'product_code': 'ABC123'}
+        new_record = {'auction_id': '12345', 'data': json.dumps({'item_id': 1, 'product_code': 'ABC123'})}
         record_id = self.items_crud['insert'](new_record)
         self.assertIsNotNone(record_id, "Failed to insert item record")
 
         # Get by ID
         record = self.items_crud['get_by_id'](record_id)
         self.assertIsNotNone(record, "Record not found by ID")
-        self.assertEqual(record[3], new_record['item_id'])
+        self.assertEqual(json.loads(record[2])['item_id'], 1)
 
         # Get by column
-        record = self.items_crud['get_by_column']('item_id', new_record['item_id'])
+        record = self.items_crud['get_by_column']('auction_id', new_record['auction_id'])
         self.assertIsNotNone(record, "Record not found by column")
-        self.assertEqual(record[3], new_record['item_id'])
+        self.assertEqual(json.loads(record[2])['item_id'], 1)
 
         # Update
-        updated_record = {'product_code': 'XYZ789'}
+        updated_record = {'data': json.dumps({'item_id': 1, 'product_code': 'XYZ789'})}
         rows_affected = self.items_crud['update'](record_id, updated_record)
         self.assertEqual(rows_affected, 1)
 
@@ -132,7 +134,7 @@ class TestCRUDOperations(unittest.TestCase):
         self.assertEqual(rows_deleted, 1)
 
         # Delete the auction record
-        rows_deleted = self.auction_crud['delete'](record_id)
+        rows_deleted = self.auction_crud['delete'](auction_id)
         self.assertEqual(rows_deleted, 1)
 
     def test_ebay_demand_crud(self):
@@ -145,8 +147,8 @@ class TestCRUDOperations(unittest.TestCase):
         auction_id = self.auction_crud['insert'](auction_record)
         self.assertIsNotNone(auction_id, "Failed to insert auction record")
 
-        # Ensure item_id exists in items_data
-        item_record = {'auction_id': '12345', 'item_id': 1, 'product_code': 'ABC123'}
+        # Ensure item exists in items_data
+        item_record = {'auction_id': '12345', 'data': json.dumps({'item_id': 1, 'product_code': 'ABC123'})}
         item_id = self.items_crud['insert'](item_record)
         self.assertIsNotNone(item_id, "Failed to insert item record")
 

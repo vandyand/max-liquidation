@@ -18,8 +18,9 @@ def normalize_dataframe(df, all_columns, auction_id):
 # Read all CSV files and collect all unique columns
 all_columns = set()
 dataframes = []
+csv_dir = os.path.join(os.path.dirname(__file__), 'csvs')
 
-for file in glob.glob("csvs/*.csv"):
+for file in glob.glob(csv_dir + "/*.csv"):
     try:
         df = pd.read_csv(file)
         
@@ -48,6 +49,6 @@ if normalized_dataframes:
     final_df.insert(0, 'id', range(1, len(final_df) + 1))
     
     # Save the standardized data to a new CSV file
-    final_df.to_csv("items_data.csv", index=False)
+    final_df.to_csv(os.path.join(csv_dir, "items_data.csv"), index=False)
 else:
     print("No data to save.")

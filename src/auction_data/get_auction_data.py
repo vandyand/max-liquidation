@@ -65,7 +65,7 @@ def fetch_auction_data(auction_url):
     print(f"Formatting data for auction url {auction_url}")
     auction_data = openai_returns_formatted_auction_data(auction_data_element, description_table, shipping_table)
 
-    auction_data['sitemap_url'] = auction_url
+    auction_data['url'] = auction_url
 
     cache[auction_url] = auction_data
 
@@ -82,15 +82,15 @@ if __name__ == '__main__':
         
         # Fetch auction IDs from the sitemap_data table
         sitemap_data = sitemap_crud['get_all'](conn)
-        sitemap_urls = [row[1] for row in sitemap_data]
-        auction_urls = [url for url in sitemap_urls if 'auction/view?id=' in url]
+        urls = [row[1] for row in sitemap_data]
+        auction_urls = [url for url in urls if 'auction/view?id=' in url]
         
         driver = setup_driver()
 
         try:
             for auction_url in auction_urls:
                 # Check if auction_url is already in the auction_data table
-                existing_auction = auction_crud['get_by_column']('sitemap_url', auction_url, conn)
+                existing_auction = auction_crud['get_by_column']('url', auction_url, conn)
                 
                 if existing_auction:
                     print(f"Skipping auction url {auction_url} as it is already in the database")
