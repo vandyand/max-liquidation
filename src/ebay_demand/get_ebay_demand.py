@@ -16,7 +16,7 @@ from db.db_utils import create_db_connection, create_crud_functions
 from openai_utils.openai_base import opanai_returns_formatted_ebay_demand_data
 import urllib.parse
 import diskcache as dc
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def setup_driver():
     chrome_options = Options()
@@ -54,7 +54,7 @@ def scrape_ebay_demand_el(item_search_url):
         driver.quit()
 
 def create_search_string(item_data):
-    columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC", "Model", "SKU"]
+    columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC"]
     search_string = ' '.join(str(item_data.get(col, '')) for col in columns_to_concat if item_data.get(col))
     return search_string
 
@@ -66,39 +66,43 @@ def get_formatted_ebay_items(url):
     cache[url] = formatted_ebay_items
     return formatted_ebay_items
 
-def main():
-    conn = create_db_connection()
+def process_item(item, ebay_demand_crud):
+    item_data = json.loads(item[2])
+    search_string = create_search_string(item_data)
+    encoded_search_string = urllib.parse.quote(search_string)
+    search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
+
+    print(f"Formatting eBay demand data for item {search_string}")
+    formatted_ebay_items = get_formatted_ebay_items(search_url)
+    
+    print(f"Inserting eBay demand data for item {search_string}")
+    for ebay_item in formatted_ebay_items:
+        ebay_item['item_id'] = item[0]
+        ebay_item['auction_id'] = item[1]
+        ebay_item['url'] = search_url
+        ebay_item['search_string'] = search_string
+        ebay_demand_crud['insert'](ebay_item)
+
+def main(max_items_to_process=None):
     items_crud = create_crud_functions('items_data')
     ebay_demand_crud = create_crud_functions('ebay_demand_data')
+
+    items = items_crud['get_all'](conn)
     
-    try:
-        items = items_crud['get_all'](conn)
+    if max_items_to_process:
+        items = items[:max_items_to_process]
+    
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(process_item, item, ebay_demand_crud) for item in items]
         
-        for item in items:
-            item_data = json.loads(item[2])
-            search_string = create_search_string(item_data)
-            encoded_search_string = urllib.parse.quote(search_string)
-            search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
-
-            print(f"Formatting eBay demand data for item {search_string}")
-            formatted_ebay_items = get_formatted_ebay_items(search_url)
-            
-            print(f"Inserting eBay demand data for item {search_string}")
-            for ebay_item in formatted_ebay_items:
-                ebay_item['item_id'] = item[0]
-                ebay_item['auction_id'] = item[1]
-                ebay_item['url'] = search_url
-                ebay_item['search_string'] = search_string
-                ebay_demand_crud['insert'](ebay_item, conn)
-
-    except Exception as e:
-        print(f"Error processing item {search_string}: {e}")
-
-    finally:
-        conn.close()
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"Error processing item: {e}")
 
 if __name__ == '__main__':
     try:
-        main()
+        main(max_items_to_process=7)
     except KeyboardInterrupt:
         print("Process interrupted by user.")

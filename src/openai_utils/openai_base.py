@@ -7,6 +7,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 import json
 from openai import OpenAI
 from openai_schemas import auction_schema, ebay_demand_schema
+import hashlib
+import diskcache as dc
+import os
 
 def gen_message_record(role, content):
     return {
@@ -54,16 +57,31 @@ def fetch_openai_json(json_schema, messages_arg):
         print(f"Error parsing openai json response: {ret}, Error: {e}")
         return None
 
+cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_demand_cache'))
+
 def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
+    ret = None
+
+    # Generate sha256 hash of ebay_sold_items_el
+    sha256_key = hashlib.sha256(ebay_sold_items_el.encode('utf-8')).hexdigest()
+
+    # Check if the result is already in the cache
+    if sha256_key in cache:
+        return cache[sha256_key]
+
     response_content = fetch_openai_json(ebay_demand_schema, [ebay_sold_items_el, "Please use 'items' key in json response with value of array of ebay sold item records"])
     
     if response_content and "items" in response_content:
-        return response_content["items"]
+        ret = response_content["items"]
     elif response_content and "data" in response_content:
-        return response_content["data"]
+        ret = response_content["data"]
     else:
         print(f"Unexpected response structure: {response_content}")
-        return None
+
+    # Store the result in the cache
+    cache[sha256_key] = ret
+
+    return ret
 
 def openai_returns_formatted_auction_data(auction_data_el, description_el, shipping_el):
     message1 = gen_user_message_record(auction_data_el)

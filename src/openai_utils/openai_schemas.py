@@ -15,10 +15,6 @@ ebay_demand_schema = {
                 "type": "string",
                 "description": "Condition of the item on eBay (brand new, used, open box, etc.)"
             },
-            "ebay_item_url": {
-                "type": "string",
-                "description": "URL of the item on eBay"
-            },
             "ebay_item_sold_date": {
                 "type": "string",
                 "description": "Date when the item was sold on eBay"
@@ -28,7 +24,6 @@ ebay_demand_schema = {
             "ebay_item_name",
             "ebay_item_price",
             "ebay_item_condition",
-            "ebay_item_url",
             "ebay_item_sold_date"
         ]
     }
