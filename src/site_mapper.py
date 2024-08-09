@@ -12,6 +12,8 @@ import signal
 import sys
 import os
 import heapq
+import diskcache as dc
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db.db_utils import create_crud_functions, create_connection
 
@@ -44,6 +46,9 @@ class SimpleCrawler:
         # chrome_options.add_argument("--headless")  # Run in headless mode
         self.driver = webdriver.Chrome(service=Service('/opt/homebrew/bin/chromedriver'), options=chrome_options)  # Use the path from `which chromedriver`
 
+        # Initialize diskcache
+        self.cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'url_cache'))
+
     def insert_url_and_get_id(self, url, parent_id, depth):
         """Helper method to insert URL into the database and return its ID."""
         data = {'url': url, 'parent_id': parent_id, 'depth': depth}
@@ -56,6 +61,33 @@ class SimpleCrawler:
         except StaleElementReferenceException:
             print(f"StaleElementReferenceException encountered for link on {self.driver.current_url}. Skipping link.")
             return None
+
+    def scrape_and_cache(self, url):
+        """Scrape the URLs from the given page and cache the result."""
+        if url in self.cache:
+            return self.cache[url]
+
+        self.driver.get(url)
+        WebDriverWait(self.driver, 2.5).until(
+            EC.presence_of_element_located((By.TAG_NAME, 'a'))
+        )
+
+        links = list(set(self.driver.find_elements(By.TAG_NAME, 'a')))
+        child_urls = []
+
+        for link in links:
+            child_url = self.get_link_href(link)
+            if not child_url:
+                continue  # Skip problematic links
+
+            # Skip invalid URLs and image files
+            if child_url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp')):
+                continue
+
+            child_urls.append(child_url)
+
+        self.cache[url] = child_urls
+        return child_urls
 
     def crawl(self):
         # Initialize the priority queue with the root node and depth 0
@@ -81,10 +113,7 @@ class SimpleCrawler:
             signal.alarm(10)  # Set the timeout to 10 seconds
 
             try:
-                self.driver.get(node.url)
-                WebDriverWait(self.driver, 2.5).until(
-                    EC.presence_of_element_located((By.TAG_NAME, 'a'))
-                )
+                child_urls = self.scrape_and_cache(node.url)
                 signal.alarm(0)  # Cancel the alarm if the page loads successfully
             except TimeoutError:
                 print(f"Timeout while loading {node.url}. Closing page and moving to next URL.")
@@ -96,21 +125,9 @@ class SimpleCrawler:
                 signal.alarm(0)  # Cancel the alarm in case of other exceptions
                 continue
 
-            # Find all links on the page and enforce uniqueness
-            links = list(set(self.driver.find_elements(By.TAG_NAME, 'a')))
+            print(f"Found {len(child_urls)} links on {node.url}")
 
-            print(f"Found {len(links)} links on {node.url}")
-
-            for link in links:
-                child_url = self.get_link_href(link)
-                if not child_url:
-                    continue  # Skip problematic links
-
-                # Skip invalid URLs and image files
-                if child_url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp')):
-                    continue
-
-                # Resolve relative URLs
+            for child_url in child_urls:
                 if child_url.startswith(self.start_url) and child_url not in self.visited:
                     child_node = URLNode(child_url)
                     node.add_child(child_node)
@@ -138,6 +155,9 @@ class SimpleCrawler:
         if self.conn:
             self.conn.close()
 
+    def close_cache(self):
+        self.cache.close()  # Close the diskcache
+
 if __name__ == '__main__':
     start_url = 'https://www.liquidation.com/'
     # start_url = 'https://www.directliquidation.com/'
@@ -149,3 +169,4 @@ if __name__ == '__main__':
     finally:
         crawler.close_driver()  # Close the Selenium driver
         crawler.close_db_connection()  # Close the connection when done
+        crawler.close_cache()  # Close the cache when done
