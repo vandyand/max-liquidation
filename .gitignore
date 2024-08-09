@@ -2,3 +2,4 @@ __pycache__
 *.csv
 *.sqlite
 venv/
+*_cache/
