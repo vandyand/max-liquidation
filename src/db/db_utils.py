@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 import sqlite3
-from db_init import create_connection
+from db_init import create_db_connection
 
 def create_crud_functions(table_name):
     
@@ -13,7 +13,7 @@ def create_crud_functions(table_name):
         conn_flag = False
         
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         columns = ', '.join(data.keys())
@@ -43,7 +43,7 @@ def create_crud_functions(table_name):
         conn_flag = False
         
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         columns = ', '.join(data.keys())
@@ -72,7 +72,7 @@ def create_crud_functions(table_name):
     def get_all(conn=None):
         conn_flag = False
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         sql = f'''
@@ -93,7 +93,7 @@ def create_crud_functions(table_name):
     def get_by_id(record_id, conn=None):
         conn_flag = False
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         sql = f'''
@@ -115,7 +115,7 @@ def create_crud_functions(table_name):
         conn_flag = False
         
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         sql = f'''
@@ -137,7 +137,7 @@ def create_crud_functions(table_name):
     def update(record_id, data, conn=None):
         conn_flag = False
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         columns = ', '.join([f"{key} = ?" for key in data.keys()])
@@ -162,7 +162,7 @@ def create_crud_functions(table_name):
     def delete(record_id, conn=None):
         conn_flag = False
         if conn is None:
-            conn = create_connection()
+            conn = create_db_connection()
             conn_flag = True
 
         sql_delete = f'''

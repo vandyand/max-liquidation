@@ -8,7 +8,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import os
 import time
-from db.db_utils import create_crud_functions, create_connection
+from db.db_utils import create_crud_functions, create_db_connection
 
 download_dir = os.path.join(os.path.dirname(__file__), 'csvs')
 
@@ -67,7 +67,7 @@ def main():
     driver = setup_driver()
     
     try:
-        conn = create_connection()
+        conn = create_db_connection()
         auction_crud = create_crud_functions('auction_data')
         
         records = auction_crud['get_all'](conn)

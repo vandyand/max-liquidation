@@ -11,7 +11,7 @@ from db_table_schemas import sitemap_table_schema, auction_data_table_schema, it
 load_dotenv()
 
 # Create a database connection
-def create_connection():
+def create_db_connection():
     db_file = os.getenv('DB_PATH')
     if os.getenv('USE_TEST_DB') == 'true':
         db_file = os.getenv('TEST_DB_PATH')
@@ -41,7 +41,7 @@ def execute_statements(conn, statements):
 
 # Create tables
 def create_tables():
-    conn = create_connection()
+    conn = create_db_connection()
     
     if conn is None:
         print("Error: Database connection is not established.")

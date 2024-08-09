@@ -16,7 +16,7 @@ from openai_utils.openai_base import openai_returns_formatted_auction_data
 from diskcache import Cache
 
 # Import database utility functions
-from db.db_utils import create_crud_functions, create_connection
+from db.db_utils import create_crud_functions, create_db_connection
 
 def setup_driver():
     chrome_options = Options()
@@ -78,7 +78,7 @@ def fetch_auction_data(auction_url):
 if __name__ == '__main__':
     try:
         # Create a connection to the database
-        conn = create_connection()
+        conn = create_db_connection()
         
         # Create CRUD functions for the sitemap_data and auction_data tables
         sitemap_crud = create_crud_functions('sitemap_data')

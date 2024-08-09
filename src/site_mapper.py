@@ -15,7 +15,8 @@ import heapq
 import diskcache as dc
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from db.db_utils import create_crud_functions, create_connection
+
+from db.db_utils import create_crud_functions, create_db_connection
 
 class URLNode:
     def __init__(self, url):
@@ -36,7 +37,7 @@ class SimpleCrawler:
         self.max_depth = max_depth
         self.visited = set()  # To keep track of visited URLs
         self.root = URLNode(start_url)
-        self.conn = create_connection()  # Open connection once
+        self.conn = create_db_connection()  # Open connection once
 
         # Create CRUD functions for the sitemap_data table
         self.sitemap_crud = create_crud_functions('sitemap_data')

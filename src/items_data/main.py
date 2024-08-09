@@ -6,7 +6,7 @@ import pandas as pd
 # Add the src directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from db.db_utils import create_crud_functions, create_connection
+from db.db_utils import create_crud_functions, create_db_connection
 
 def main():
     # Load the CSV file into a DataFrame
@@ -17,7 +17,7 @@ def main():
     df = df.where(pd.notnull(df), None)
 
     # Create a connection to the database
-    conn = create_connection()
+    conn = create_db_connection()
 
     # Create CRUD functions for the items_data table
     items_crud = create_crud_functions('items_data')

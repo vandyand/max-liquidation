@@ -3,28 +3,34 @@ ebay_demand_schema = {
     "items": {
         "type": "object",
         "properties": {
-            "item_name": {
+            "ebay_item_name": {
                 "type": "string",
-                "description": "Name of the item"
+                "description": "Name of the item on eBay"
             },
-            "item_price": {
+            "ebay_item_price": {
                 "type": "string",
-                "description": "Price of the item"
+                "description": "Price of the item on eBay"
             },
-            "item_condition": {
+            "ebay_item_condition": {
                 "type": "string",
-                "description": "Condition of the item (brand new, used, open box, etc.)"
+                "description": "Condition of the item on eBay (brand new, used, open box, etc.)"
             },
-            "item_url": {
+            "ebay_item_url": {
                 "type": "string",
-                "description": "URL of the item found in href of 's-item__link' <a> tag"
+                "description": "URL of the item on eBay"
             },
-            "item_sold_date": {
+            "ebay_item_sold_date": {
                 "type": "string",
-                "description": "Date when the item was sold"
+                "description": "Date when the item was sold on eBay"
             }
         },
-        "required": ["item_name", "item_price", "item_condition", "item_url", "item_sold_date"]
+        "required": [
+            "ebay_item_name",
+            "ebay_item_price",
+            "ebay_item_condition",
+            "ebay_item_url",
+            "ebay_item_sold_date"
+        ]
     }
 }
 
