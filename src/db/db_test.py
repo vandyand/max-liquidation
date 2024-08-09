@@ -66,7 +66,7 @@ class TestCRUDOperations(unittest.TestCase):
         self.assertIsNotNone(sitemap_id, "Failed to insert sitemap record")
 
         # Insert
-        new_record = {'sitemap_url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
+        new_record = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
         record_id = self.auction_crud['insert'](new_record)
         self.assertIsNotNone(record_id, "Failed to insert auction record")
 
@@ -99,7 +99,7 @@ class TestCRUDOperations(unittest.TestCase):
         sitemap_id = self.sitemap_crud['insert'](sitemap_record)
         self.assertIsNotNone(sitemap_id, "Failed to insert sitemap record")
 
-        auction_record = {'sitemap_url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
+        auction_record = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
         auction_id = self.auction_crud['insert'](auction_record)
         self.assertIsNotNone(auction_id, "Failed to insert auction record")
 
@@ -111,12 +111,12 @@ class TestCRUDOperations(unittest.TestCase):
         # Get by ID
         record = self.items_crud['get_by_id'](record_id)
         self.assertIsNotNone(record, "Record not found by ID")
-        self.assertEqual(record[2], new_record['item_id'])
+        self.assertEqual(record[3], new_record['item_id'])
 
         # Get by column
         record = self.items_crud['get_by_column']('item_id', new_record['item_id'])
         self.assertIsNotNone(record, "Record not found by column")
-        self.assertEqual(record[2], new_record['item_id'])
+        self.assertEqual(record[3], new_record['item_id'])
 
         # Update
         updated_record = {'product_code': 'XYZ789'}
@@ -141,7 +141,7 @@ class TestCRUDOperations(unittest.TestCase):
         sitemap_id = self.sitemap_crud['insert'](sitemap_record)
         self.assertIsNotNone(sitemap_id, "Failed to insert sitemap record")
 
-        auction_record = {'sitemap_url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
+        auction_record = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
         auction_id = self.auction_crud['insert'](auction_record)
         self.assertIsNotNone(auction_id, "Failed to insert auction record")
 
