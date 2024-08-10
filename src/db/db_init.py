@@ -15,12 +15,10 @@ def create_db_connection():
     db_file = os.getenv('DB_PATH')
     if os.getenv('USE_TEST_DB') == 'true':
         db_file = os.getenv('TEST_DB_PATH')
-    print(db_file)
     conn = None
     
     try:
         conn = sqlite3.connect(db_file)
-        print(f'Connected to {db_file}')
     except sqlite3.Error as e:
         print(e)
     

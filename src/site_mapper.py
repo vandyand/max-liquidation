@@ -69,7 +69,7 @@ class SimpleCrawler:
             return self.cache[url]
 
         self.driver.get(url)
-        WebDriverWait(self.driver, 2.5).until(
+        WebDriverWait(self.driver, 5).until(
             EC.presence_of_element_located((By.TAG_NAME, 'a'))
         )
 

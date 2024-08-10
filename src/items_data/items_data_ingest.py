@@ -41,9 +41,24 @@ all_columns = sorted(all_columns)
 # Normalize all dataframes to have the same columns
 normalized_dataframes = [normalize_dataframe(df, all_columns, auction_id) for df, auction_id in dataframes]
 
+# Filter out rows and columns that are all-NA
+filtered_dataframes = []
+for df in normalized_dataframes:
+    df = df.dropna(how='all').dropna(axis=1, how='all')
+    if not df.empty:
+        filtered_dataframes.append(df)
+    else:
+        print("Filtered out an empty dataframe")
+
+# Debug print to check the filtered dataframes
+print(f"Number of filtered dataframes: {len(filtered_dataframes)}")
+
+# Reset index for each dataframe to ensure unique index values
+filtered_dataframes = [df.reset_index(drop=True) for df in filtered_dataframes]
+
 # Concatenate all dataframes into one
-if normalized_dataframes:
-    final_df = pd.concat(normalized_dataframes, ignore_index=True)
+if filtered_dataframes:
+    final_df = pd.concat(filtered_dataframes, ignore_index=True)
     
     # Add an auto-incrementing "id" column
     final_df.insert(0, 'id', range(1, len(final_df) + 1))

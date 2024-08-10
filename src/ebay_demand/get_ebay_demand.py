@@ -87,7 +87,7 @@ def main(max_items_to_process=None):
     items_crud = create_crud_functions('items_data')
     ebay_demand_crud = create_crud_functions('ebay_demand_data')
 
-    items = items_crud['get_all'](conn)
+    items = items_crud['get_all']()
     
     if max_items_to_process:
         items = items[:max_items_to_process]

@@ -48,6 +48,14 @@ def wait_for_downloads(timeout=30):
     return not dl_wait
 
 def download_file(driver, url):
+    auction_id = url.split('=')[1]
+
+    file_path = os.path.join(download_dir, f'm{auction_id}.csv')
+    
+    if os.path.exists(file_path):
+        print(f"File {file_path} already exists. Skipping download.")
+        return
+    
     try:
         driver.get(url)
         
