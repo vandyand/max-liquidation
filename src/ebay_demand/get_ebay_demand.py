@@ -12,7 +12,7 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from db.db_utils import create_db_connection, create_crud_functions
+from db.db_utils import create_crud_functions
 from openai_utils.openai_base import opanai_returns_formatted_ebay_demand_data
 import urllib.parse
 import diskcache as dc
@@ -38,7 +38,7 @@ def scrape_ebay_demand_el(item_search_url):
             EC.presence_of_element_located((By.CLASS_NAME, "srp-results"))
         )
     except Exception as e:
-        print(f"Timeout waiting for eBay search results for item {item_search_string}: {e}")
+        print(f"Timeout waiting for eBay search results for item {item_search_url}: {e}")
         return None
     
     page_content = driver.page_source
@@ -48,7 +48,7 @@ def scrape_ebay_demand_el(item_search_url):
         results_list = soup.find("ul", class_="srp-results srp-list clearfix").get_text()
         return results_list
     except AttributeError as e:
-        print(f"Error processing eBay search results for item {item_search_string}: {e}")
+        print(f"Error processing eBay search results for item {item_search_url}: {e}")
         return None
     finally:
         driver.quit()
@@ -69,6 +69,10 @@ def get_formatted_ebay_items(url):
 def process_item(item, ebay_demand_crud):
     item_data = json.loads(item[2])
     search_string = create_search_string(item_data)
+    if search_string == '':
+        print(f"No search string found for item {item[0]}")
+        return
+
     encoded_search_string = urllib.parse.quote(search_string)
     search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
 
