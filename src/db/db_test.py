@@ -180,5 +180,106 @@ class TestCRUDOperations(unittest.TestCase):
         rows_deleted = self.ebay_demand_crud['delete'](record_id)
         self.assertEqual(rows_deleted, 1)
 
+    def test_sitemap_delete_all(self):
+        # Insert multiple records
+        new_record1 = {'url': 'http://example1.com', 'parent_id': None, 'depth': 2}
+        new_record2 = {'url': 'http://example2.com', 'parent_id': None, 'depth': 2}
+        
+        self.sitemap_crud['insert'](new_record1)
+        self.sitemap_crud['insert'](new_record2)
+
+        # Verify records exist
+        records = self.sitemap_crud['get_all']()
+        self.assertGreaterEqual(len(records), 2)
+
+        # Delete all records
+        rows_deleted = self.sitemap_crud['delete_all']()
+        self.assertGreaterEqual(rows_deleted, 2)
+
+        # Verify all records are deleted
+        records = self.sitemap_crud['get_all']()
+        self.assertEqual(len(records), 0)
+
+    def test_auction_delete_all(self):
+        # Insert multiple records
+        sitemap_record = {'url': 'http://example.com', 'parent_id': None, 'depth': 2}
+        sitemap_id = self.sitemap_crud['insert'](sitemap_record)
+        
+        new_record1 = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction 1'}
+        new_record2 = {'url': sitemap_id, 'auction_id': '67890', 'title': 'Test Auction 2'}
+        
+        self.auction_crud['insert'](new_record1)
+        self.auction_crud['insert'](new_record2)
+
+        # Verify records exist
+        records = self.auction_crud['get_all']()
+        self.assertGreaterEqual(len(records), 2)
+
+        # Delete all records
+        rows_deleted = self.auction_crud['delete_all']()
+        self.assertGreaterEqual(rows_deleted, 2)
+
+        # Verify all records are deleted
+        records = self.auction_crud['get_all']()
+        self.assertEqual(len(records), 0)
+
+    def test_items_delete_all(self):
+        # Ensure auction_id exists in auction_data
+        sitemap_record = {'url': 'http://example.com', 'parent_id': None, 'depth': 2}
+        sitemap_id = self.sitemap_crud['insert'](sitemap_record)
+        
+        auction_record = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
+        auction_id = self.auction_crud['insert'](auction_record)
+
+        # Insert multiple records
+        new_record1 = {'auction_id': '12345', 'data': json.dumps({'item_id': 1, 'product_code': 'ABC123'})}
+        new_record2 = {'auction_id': '12345', 'data': json.dumps({'item_id': 2, 'product_code': 'DEF456'})}
+        
+        self.items_crud['insert'](new_record1)
+        self.items_crud['insert'](new_record2)
+
+        # Verify records exist
+        records = self.items_crud['get_all']()
+        self.assertGreaterEqual(len(records), 2)
+
+        # Delete all records
+        rows_deleted = self.items_crud['delete_all']()
+        self.assertGreaterEqual(rows_deleted, 2)
+
+        # Verify all records are deleted
+        records = self.items_crud['get_all']()
+        self.assertEqual(len(records), 0)
+
+    def test_ebay_demand_delete_all(self):
+        # Ensure auction_id exists in auction_data
+        sitemap_record = {'url': 'http://example.com', 'parent_id': None, 'depth': 2}
+        sitemap_id = self.sitemap_crud['insert'](sitemap_record)
+        
+        auction_record = {'url': sitemap_id, 'auction_id': '12345', 'title': 'Test Auction'}
+        auction_id = self.auction_crud['insert'](auction_record)
+
+        # Ensure item exists in items_data
+        item_record = {'auction_id': '12345', 'data': json.dumps({'item_id': 1, 'product_code': 'ABC123'})}
+        item_id = self.items_crud['insert'](item_record)
+
+        # Insert multiple records
+        new_record1 = {'auction_id': '12345', 'item_id': item_id, 'search_string': 'Test Search 1'}
+        new_record2 = {'auction_id': '12345', 'item_id': item_id, 'search_string': 'Test Search 2'}
+        
+        self.ebay_demand_crud['insert'](new_record1)
+        self.ebay_demand_crud['insert'](new_record2)
+
+        # Verify records exist
+        records = self.ebay_demand_crud['get_all']()
+        self.assertGreaterEqual(len(records), 2)
+
+        # Delete all records
+        rows_deleted = self.ebay_demand_crud['delete_all']()
+        self.assertGreaterEqual(rows_deleted, 2)
+
+        # Verify all records are deleted
+        records = self.ebay_demand_crud['get_all']()
+        self.assertEqual(len(records), 0)
+
 if __name__ == '__main__':
     unittest.main()

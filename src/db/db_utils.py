@@ -181,6 +181,28 @@ def create_crud_functions(table_name):
             if conn_flag:
                 conn.close()
 
+    def delete_all(conn=None):
+        conn_flag = False
+        if conn is None:
+            conn = create_db_connection()
+            conn_flag = True
+
+        sql_delete = f'''
+        DELETE FROM {table_name};
+        '''
+        try:
+            cur = conn.cursor()
+            cur.execute(sql_delete)
+            conn.commit()
+            rowcount = cur.rowcount
+            return rowcount
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return None
+        finally:
+            if conn_flag:
+                conn.close()
+
     return {
         'insert': insert,
         'insert_or_ignore': insert_or_ignore,
@@ -188,7 +210,8 @@ def create_crud_functions(table_name):
         'get_by_id': get_by_id,
         'get_by_column': get_by_column,
         'update': update,
-        'delete': delete
+        'delete': delete,
+        'delete_all': delete_all
     }
 
 def delete_database(test=False):

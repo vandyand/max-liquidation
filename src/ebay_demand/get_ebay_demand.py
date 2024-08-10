@@ -66,9 +66,7 @@ def get_formatted_ebay_items(url):
     cache[url] = formatted_ebay_items
     return formatted_ebay_items
 
-def process_item(item, ebay_demand_crud):
-    item_data = json.loads(item[2])
-    search_string = create_search_string(item_data)
+def process_item(item, search_string, ebay_demand_crud):
     if search_string == '':
         print(f"No search string found for item {item[0]}")
         return
@@ -95,9 +93,19 @@ def main(max_items_to_process=None):
     
     if max_items_to_process:
         items = items[:max_items_to_process]
+
+    processed_search_strings = set()
     
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(process_item, item, ebay_demand_crud) for item in items]
+    with ThreadPoolExecutor(max_workers=7) as executor:
+        futures = []
+        
+        for item in items:
+            item_data = json.loads(item[2])
+            search_string = create_search_string(item_data)
+            
+            if search_string and search_string not in processed_search_strings:
+                processed_search_strings.add(search_string)
+                futures.append(executor.submit(process_item, item, search_string, ebay_demand_crud))
         
         for future in as_completed(futures):
             try:
@@ -107,6 +115,6 @@ def main(max_items_to_process=None):
 
 if __name__ == '__main__':
     try:
-        main(max_items_to_process=7)
+        main()
     except KeyboardInterrupt:
         print("Process interrupted by user.")
