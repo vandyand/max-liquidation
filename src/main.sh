@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# delete stuff
+python src/delete_caches.py
+python src/items_data/delete_csvs.py
+
 # reinitialize db
 python src/db/db_init.py
 python src/db/db_test.py

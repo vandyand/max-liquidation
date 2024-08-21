@@ -72,7 +72,7 @@ def create_search_string(item_data):
 
 def format_and_save_ebay_demand_items(ebay_demand_el, ebay_demand_crud, item, search_url, search_string):
     formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
-    print(f"Inserting eBay demand data for item {item}")
+    # print(f"Inserting eBay demand data for item {item}")
     for ebay_item in formatted_ebay_items:
         ebay_item['item_id'] = item[0]
         ebay_item['auction_id'] = item[1]
@@ -88,7 +88,7 @@ def process_item(item, search_string, ebay_demand_crud):
     encoded_search_string = urllib.parse.quote(search_string)
     search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
 
-    print(f"Formatting eBay demand data for item {search_string}")
+    print(f"Auction ID: {item[1]} - Formatting eBay demand data for item {search_string}")
     ebay_demand_el = scrape_ebay_demand_el(search_url)
 
     # Start a new thread to format and save eBay demand items

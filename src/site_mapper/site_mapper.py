@@ -129,7 +129,7 @@ class SimpleCrawler:
             print(f"Found {len(child_urls)} links on {node.url}")
 
             for child_url in child_urls:
-                if child_url.startswith(self.start_url) and child_url not in self.visited:
+                if "auction/view?id=" in child_url and child_url not in self.visited:
                     child_node = URLNode(child_url)
                     node.add_child(child_node)
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     start_url = 'https://www.liquidation.com/auction/search?flag=new&searchparam_category1=&searchparam_dimension=10104&searchparam_words=Vacuum'
     # start_url = 'https://www.liquidation.com/'
     # start_url = 'https://www.directliquidation.com/'
-    crawler = SimpleCrawler(start_url)
+    crawler = SimpleCrawler(start_url, max_depth=0)
     try:
         crawler.crawl()  # Start crawling
     except KeyboardInterrupt:
@@ -172,4 +172,3 @@ if __name__ == '__main__':
         crawler.close_driver()  # Close the Selenium driver
         crawler.close_db_connection()  # Close the connection when done
         crawler.close_cache()  # Close the cache when done
-        
