@@ -17,18 +17,25 @@ from openai_utils.openai_base import opanai_returns_formatted_ebay_demand_data
 import urllib.parse
 import diskcache as dc
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 def setup_driver():
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--incognito")
+    chrome_options.add_argument("--tor")
     driver = webdriver.Chrome(service=Service('/opt/homebrew/bin/chromedriver'), options=chrome_options)
     return driver
 
-cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_cache'))
+
+ebay_demand_el_cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_demand_el_cache'))
 
 def scrape_ebay_demand_el(item_search_url):
+    if item_search_url in ebay_demand_el_cache:
+        return ebay_demand_el_cache[item_search_url]
+
     driver = setup_driver()
     
     driver.get(item_search_url)
@@ -45,8 +52,13 @@ def scrape_ebay_demand_el(item_search_url):
     soup = BeautifulSoup(page_content, 'html.parser')
     
     try:
-        results_list = soup.find("ul", class_="srp-results srp-list clearfix").get_text()
-        return results_list
+        ebay_demand_el = soup.find("ul", class_="srp-results srp-list clearfix").get_text()
+
+        if not ebay_demand_el:
+            raise ValueError(f"No results found for item {item_search_url}")
+
+        ebay_demand_el_cache[item_search_url] = ebay_demand_el
+        return ebay_demand_el
     except AttributeError as e:
         print(f"Error processing eBay search results for item {item_search_url}: {e}")
         return None
@@ -58,13 +70,15 @@ def create_search_string(item_data):
     search_string = ' '.join(str(item_data.get(col, '')) for col in columns_to_concat if item_data.get(col))
     return search_string
 
-def get_formatted_ebay_items(url):
-    if url in cache:
-        return cache[url]
-    ebay_demand_el = scrape_ebay_demand_el(url)
+def format_and_save_ebay_demand_items(ebay_demand_el, ebay_demand_crud, item, search_url, search_string):
     formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
-    cache[url] = formatted_ebay_items
-    return formatted_ebay_items
+    print(f"Inserting eBay demand data for item {item}")
+    for ebay_item in formatted_ebay_items:
+        ebay_item['item_id'] = item[0]
+        ebay_item['auction_id'] = item[1]
+        ebay_item['url'] = search_url
+        ebay_item['search_string'] = search_string
+        ebay_demand_crud['insert'](ebay_item)
 
 def process_item(item, search_string, ebay_demand_crud):
     if search_string == '':
@@ -75,15 +89,14 @@ def process_item(item, search_string, ebay_demand_crud):
     search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
 
     print(f"Formatting eBay demand data for item {search_string}")
-    formatted_ebay_items = get_formatted_ebay_items(search_url)
-    
-    print(f"Inserting eBay demand data for item {search_string}")
-    for ebay_item in formatted_ebay_items:
-        ebay_item['item_id'] = item[0]
-        ebay_item['auction_id'] = item[1]
-        ebay_item['url'] = search_url
-        ebay_item['search_string'] = search_string
-        ebay_demand_crud['insert'](ebay_item)
+    ebay_demand_el = scrape_ebay_demand_el(search_url)
+
+    # Start a new thread to format and save eBay demand items
+    threading.Thread(target=format_and_save_ebay_demand_items, args=(ebay_demand_el, ebay_demand_crud, item, search_url, search_string)).start()
+
+    # Return immediately
+    return
+
 
 def main(max_items_to_process=None):
     items_crud = create_crud_functions('items_data')
@@ -96,7 +109,7 @@ def main(max_items_to_process=None):
 
     processed_search_strings = set()
     
-    with ThreadPoolExecutor(max_workers=7) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         futures = []
         
         for item in items:
