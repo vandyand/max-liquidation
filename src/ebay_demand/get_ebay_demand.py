@@ -88,6 +88,10 @@ def process_item(item, search_string, ebay_demand_crud):
     encoded_search_string = urllib.parse.quote(search_string)
     search_url = f"https://www.ebay.com/sch/i.html?_nkw={encoded_search_string}&LH_Sold=1&LH_Complete=1"
 
+    if search_url == "https://www.ebay.com/sch/i.html?_nkw=%20&LH_Sold=1&LH_Complete=1":
+        print(f"Skipping item {item[0]} due to empty search string")
+        return
+
     print(f"Auction ID: {item[1]} - Formatting eBay demand data for item {search_string}")
     ebay_demand_el = scrape_ebay_demand_el(search_url)
 
