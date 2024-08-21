@@ -19,6 +19,11 @@ def delete_items_data_csv():
 def main():
     # Load the CSV file into a DataFrame
     csv_file_path = os.path.join(os.path.dirname(__file__), 'csvs', 'items_data.csv')
+
+    if not os.path.exists(csv_file_path) or os.path.getsize(csv_file_path) == 0:
+        print(f"The file {csv_file_path} does not exist or is empty.")
+        return
+    
     df = pd.read_csv(csv_file_path)
 
     # Replace NaN values with None

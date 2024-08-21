@@ -45,10 +45,12 @@ normalized_dataframes = [normalize_dataframe(df, all_columns, auction_id) for df
 filtered_dataframes = []
 for df in normalized_dataframes:
     df = df.dropna(how='all').dropna(axis=1, how='all')
-    if not df.empty:
+    if not df.empty and len(df) <= 10:
         filtered_dataframes.append(df)
-    else:
+    elif df.empty:
         print("Filtered out an empty dataframe")
+    else:
+        print(f"Filtered out a dataframe with more than 10 rows: {len(df)} rows")
 
 # Debug print to check the filtered dataframes
 print(f"Number of filtered dataframes: {len(filtered_dataframes)}")
@@ -57,7 +59,7 @@ print(f"Number of filtered dataframes: {len(filtered_dataframes)}")
 filtered_dataframes = [df.reset_index(drop=True) for df in filtered_dataframes]
 
 # Concatenate all dataframes into one
-if filtered_dataframes:
+if filtered_dataframes and len(filtered_dataframes) > 0:
     final_df = pd.concat(filtered_dataframes, ignore_index=True)
     
     # Add an auto-incrementing "id" column

@@ -87,7 +87,7 @@ if __name__ == '__main__':
         # Fetch auction IDs from the sitemap_data table
         sitemap_data = sitemap_crud['get_all'](conn)
         urls = [row[1] for row in sitemap_data]
-        auction_urls = [url for url in urls if 'auction/view?id=' in url][:7]
+        auction_urls = [url for url in urls if 'auction/view?id=' in url][:3]
         
         driver = setup_driver()
 
