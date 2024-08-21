@@ -3,7 +3,7 @@ python src/db/db_init.py
 python src/db/db_test.py
 
 # write sitemap to db
-python src/site_mapper.py
+python src/site_mapper/site_mapper.py
 
 # get and write auction data to db
 python src/auction_data/get_auction_data.py

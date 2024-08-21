@@ -160,7 +160,8 @@ class SimpleCrawler:
         self.cache.close()  # Close the diskcache
 
 if __name__ == '__main__':
-    start_url = 'https://www.liquidation.com/'
+    start_url = 'https://www.liquidation.com/auction/search?flag=new&searchparam_category1=&searchparam_dimension=10104&searchparam_words=Vacuum'
+    # start_url = 'https://www.liquidation.com/'
     # start_url = 'https://www.directliquidation.com/'
     crawler = SimpleCrawler(start_url)
     try:
@@ -171,3 +172,4 @@ if __name__ == '__main__':
         crawler.close_driver()  # Close the Selenium driver
         crawler.close_db_connection()  # Close the connection when done
         crawler.close_cache()  # Close the cache when done
+        
