@@ -39,7 +39,7 @@ def fetch_openai_json(json_schema, messages_arg):
     
     response_content = OpenAI().chat.completions.create(
         model="gpt-4o-mini",
-        max_tokens=10000,
+        max_tokens=16384,
         messages=[
             gen_message_record("system", "You are a helpful assistant. Please respond in JSON format according to provided schema."),
             gen_message_record("user", json.dumps(json_schema)),

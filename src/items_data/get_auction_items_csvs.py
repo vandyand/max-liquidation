@@ -1,12 +1,14 @@
 import os
 import sys
+import pandas as pd
+import random
+import string
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-import os
 import time
 from db.db_utils import create_crud_functions, create_db_connection
 
@@ -48,9 +50,11 @@ def wait_for_downloads(timeout=30):
     return not dl_wait
 
 def download_file(driver, url):
+    print(f"Downloading file from URL {url}")
     auction_id = url.split('=')[1]
 
     file_path = os.path.join(download_dir, f'm{auction_id}.csv')
+    print(f"File path: {file_path}")
     
     if os.path.exists(file_path):
         print(f"File {file_path} already exists. Skipping download.")
@@ -61,7 +65,7 @@ def download_file(driver, url):
         
         # Wait for the download to complete
         if wait_for_downloads():
-            print(f"Downloaded {url}")
+            print(f"Downloaded csv manifest from {url}")
         else:
             print(f"Download timed out for {url}")
     except Exception as e:
@@ -99,3 +103,31 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+def generate_random_id(length=16):
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+
+def fetch_auction_items(auction_id):
+    driver = setup_driver()
+    try:
+        print(f"Downloading auction items for auction ID {auction_id}")
+        url = f'https://www.liquidation.com/auction/csv_manifest?auctionId={auction_id}'
+        print(f"Downloading auction items for auction URL {url}")
+        download_file(driver, url)
+        time.sleep(0.1)
+        
+        # Process the downloaded CSV file
+        file_path = os.path.join(download_dir, f'm{auction_id}.csv')
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            df['auction_id'] = auction_id
+            df['id'] = [generate_random_id() for _ in range(len(df))]
+            return df.to_dict(orient='records')
+        else:
+            print(f"No CSV file found for auction URL {url}")
+            return None
+    except Exception as e:
+        print(f"Error fetching auction items for auction URL {url}: {e}")
+        return None
+    finally:
+        driver.quit()

@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import os
 import sys
 import json
+import random
+import string
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -80,7 +82,7 @@ def format_and_save_ebay_demand_items(ebay_demand_el, ebay_demand_crud, item, se
         ebay_item['search_string'] = search_string
         ebay_demand_crud['insert'](ebay_item)
 
-def process_item(item, search_string, ebay_demand_crud):
+def process_item_og(item, search_string, ebay_demand_crud):
     if search_string == '':
         print(f"No search string found for item {item[0]}")
         return
@@ -122,7 +124,7 @@ def main(max_items_to_process=None):
             
             if search_string and search_string not in processed_search_strings:
                 processed_search_strings.add(search_string)
-                futures.append(executor.submit(process_item, item, search_string, ebay_demand_crud))
+                futures.append(executor.submit(process_item_og, item, search_string, ebay_demand_crud))
         
         for future in as_completed(futures):
             try:
@@ -135,3 +137,50 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print("Process interrupted by user.")
+
+def generate_random_id(length=16):
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+
+def fetch_ebay_demand(items_data):
+    print(f"Fetching eBay demand data for items: {items_data}")
+    
+    ebay_demand_data = []
+    
+    def process_item(item):
+        try:
+            search_string = create_search_string(item)
+            
+            if search_string:
+                search_url = f"https://www.ebay.com/sch/i.html?_nkw={urllib.parse.quote(search_string)}&LH_Sold=1&LH_Complete=1"
+                print(f"Getting eBay demand data for {search_url}")
+                
+                ebay_demand_el = scrape_ebay_demand_el(search_url)
+                
+                if ebay_demand_el:
+                    formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
+                    
+                    for ebay_item in formatted_ebay_items:
+                        ebay_item['id'] = generate_random_id()
+                        ebay_item['item_id'] = item['id']
+                        ebay_item['auction_id'] = item['auction_id']
+                        ebay_item['url'] = search_url
+                        ebay_item['search_string'] = search_string
+                        ebay_demand_data.append(ebay_item)
+        except Exception as e:
+            print(f"Error processing item {item}: {e}")
+
+    try:
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(process_item, item) for item in items_data]
+            
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    print(f"Error in future: {e}")
+        
+        return ebay_demand_data
+    
+    except Exception as e:
+        print(f"Error fetching eBay demand data: {e}")
+        return []
