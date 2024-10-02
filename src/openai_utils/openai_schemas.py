@@ -1,4 +1,4 @@
-ebay_demand_schema = {
+ebay_sold_items_schema = {
     "type": "array",
     "items": {
         "type": "object",
@@ -29,6 +29,17 @@ ebay_demand_schema = {
     }
 }
 
+ebay_search_string_schema = {
+    "type": "object",
+    "properties": {
+        "search_string": {
+            "type": "string",
+            "description": "Search string to use for finding recently sold eBay items."
+        }
+    },
+    "required": ["search_string"]
+}
+
 auction_schema = {
     "type": "object",
     "properties": {
@@ -44,9 +55,9 @@ auction_schema = {
             "type": "string",
             "description": "Description of the auction"
         },
-        "time_left": {
+        "closes_datetime": {
             "type": "string",
-            "description": "Time left for the auction to end"
+            "description": "Datetime when the auction closes"
         },
         "stated_msrp": {
             "type": "real",
@@ -113,5 +124,5 @@ auction_schema = {
             "description": "Minimum shipping fee for the auction item"
         }
     },
-    "required": ["auction_id", "title", "description", "time_left", "buy_now_price", "views", "bids", "bidders", "watching", "location", "seller", "condition", "shipping_terms", "shipping_estimate", "total_weight", "quantity_in_lot", "buyers_premium", "auction_type", "minimum_shipping_fee"]
+    "required": ["auction_id", "title", "description", "closes_datetime", "buy_now_price", "views", "bids", "bidders", "watching", "location", "seller", "condition", "shipping_terms", "shipping_estimate", "total_weight", "quantity_in_lot", "buyers_premium", "auction_type", "minimum_shipping_fee"]
 }

@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 import json
 from openai import OpenAI
-from openai_schemas import auction_schema, ebay_demand_schema
+from openai_schemas import auction_schema, ebay_sold_items_schema, ebay_search_string_schema
 import hashlib
 import diskcache as dc
 import os
@@ -32,6 +32,8 @@ def fetch_openai_json(json_schema, messages_arg):
         messages = [messages_arg]
     
     elif isinstance(messages_arg, list):
+        if not all(isinstance(msg, str) or is_message_record(msg) for msg in messages_arg):
+            raise ValueError("All items in the messages_arg list must be a string or a message record.")
         messages = [gen_user_message_record(msg) if isinstance(msg, str) else msg for msg in messages_arg]
     
     else:
@@ -41,7 +43,7 @@ def fetch_openai_json(json_schema, messages_arg):
         model="gpt-4o-mini",
         max_tokens=16384,
         messages=[
-            gen_message_record("system", "You are a helpful assistant. Please respond in JSON format according to provided schema."),
+            gen_message_record("system", "You are a helpful data parsing assistant. Please respond in JSON format according to provided schema."),
             gen_message_record("user", json.dumps(json_schema)),
             *messages,
             gen_message_record("user", "Please use the provided data to generate a JSON object that matches the schema")
@@ -69,7 +71,7 @@ def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
     if sha256_key in cache:
         return cache[sha256_key]
 
-    response_content = fetch_openai_json(ebay_demand_schema, [ebay_sold_items_el, "Please use 'items' key in json response with value of array of ebay sold item records"])
+    response_content = fetch_openai_json(ebay_sold_items_schema, [ebay_sold_items_el, "\n\nPlease return json response with 'items' key according to schema. Value should be an array of 'ebay sold item' records"])
     
     if response_content and "items" in response_content:
         ret = response_content["items"]
@@ -77,11 +79,19 @@ def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
         ret = response_content["data"]
     else:
         print(f"Unexpected response structure: {response_content}")
+        raise Exception(f"Unexpected response structure: {response_content}")
 
     # Store the result in the cache
     cache[sha256_key] = ret
 
     return ret
+
+def openai_returns_ebay_search_string(auction_data, item_data):
+    message1 = gen_user_message_record(auction_data)
+    message2 = gen_user_message_record(item_data)
+    messages = [message1, message2]
+    response_content = fetch_openai_json(ebay_search_string_schema, messages)
+    return response_content
 
 def openai_returns_formatted_auction_data(auction_data_el, description_el, shipping_el):
     message1 = gen_user_message_record(auction_data_el)

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS auction_data (
     auction_id TEXT UNIQUE,
     title TEXT,
     description TEXT,
-    time_left TEXT,
+    closes_datetime TEXT,
     stated_msrp REAL,
     buy_now_price REAL,
     views INTEGER,

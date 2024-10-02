@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Max Liquidation</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-4">
+      <h1 class="text-4xl font-bold mb-4">Max Liquidation</h1>
+
+      <form id="auctionForm" class="bg-white p-6 rounded shadow-md">
+        <label for="auction_url" class="block text-lg font-medium mb-2">Auction URL:</label>
+        <input type="text" id="auction_url" name="auction_url" required class="w-full p-2 border border-gray-300 rounded mb-4" />
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+      </form>
+
+      <div id="resultsPanel" class="mt-8 hidden">
+        <h2 class="text-2xl font-semibold mb-4">Auction Data</h2>
+        <table id="auctionDataTable" class="min-w-full bg-white border border-gray-300 mb-8"></table>
+
+        <h2 class="text-2xl font-semibold mb-4">Items Data</h2>
+        <table id="itemsDataTable" class="min-w-full bg-white border border-gray-300 mb-8">
+          <thead>
+            <tr id="itemsDataHeader" class="bg-gray-200"></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <h2 class="text-2xl font-semibold mb-4">eBay Demand Data</h2>
+        <table id="ebayDemandDataTable" class="min-w-full bg-white border border-gray-300">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="p-2 border">ebay_item_name</th>
+              <th class="p-2 border">ebay_item_price</th>
+              <th class="p-2 border">ebay_item_condition</th>
+              <th class="p-2 border">ebay_item_sold_date</th>
+              <th class="p-2 border">id</th>
+              <th class="p-2 border">item_id</th>
+              <th class="p-2 border">auction_id</th>
+              <th class="p-2 border">url</th>
+              <th class="p-2 border">search_string</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("auctionForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          var auctionUrl = document.getElementById("auction_url").value;
+
+          // Hide the results panel while fetching new data
+          document.getElementById("resultsPanel").classList.add("hidden");
+
+          fetch("http://localhost:8000/process_auction", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ auction_url: auctionUrl }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Auction Data:", data);
+              displayData(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+      function displayData(data) {
+        document.getElementById("resultsPanel").classList.remove("hidden");
+
+        // Display auction data
+        var auctionDataTable = document.getElementById("auctionDataTable");
+        auctionDataTable.innerHTML = "";
+        for (var key in data.auction_data) {
+          var row = auctionDataTable.insertRow();
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          cell1.className = "p-2 border";
+          cell2.className = "p-2 border";
+          cell1.innerHTML = key;
+          cell2.innerHTML = data.auction_data[key];
+        }
+
+        // Display items data
+        var itemsDataTable = document.getElementById("itemsDataTable").getElementsByTagName('tbody')[0];
+        itemsDataTable.innerHTML = "";
+        
+        var itemsDataHeader = document.getElementById("itemsDataHeader");
+        itemsDataHeader.innerHTML = "";
+        if (data.items_data.length > 0) {
+          var firstItem = data.items_data[0];
+          for (var key in firstItem) {
+            var th = document.createElement("th");
+            th.className = "p-2 border";
+            th.innerHTML = key;
+            itemsDataHeader.appendChild(th);
+          }
+        }
+
+        data.items_data.forEach(function (item) {
+          var row = itemsDataTable.insertRow();
+          for (var key in item) {
+            var cell = row.insertCell();
+            cell.className = "p-2 border";
+            cell.innerHTML = item[key];
+          }
+        });
+
+        // Display eBay demand data
+        var ebayDemandDataTable = document.getElementById("ebayDemandDataTable").getElementsByTagName('tbody')[0];
+        ebayDemandDataTable.innerHTML = "";
+        data.ebay_demand_data.forEach(function (item) {
+          var row = ebayDemandDataTable.insertRow();
+          for (var key in item) {
+            var cell = row.insertCell();
+            cell.className = "p-2 border";
+            cell.innerHTML = item[key];
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

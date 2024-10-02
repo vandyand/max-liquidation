@@ -68,7 +68,7 @@ def scrape_ebay_demand_el(item_search_url):
         driver.quit()
 
 def create_search_string(item_data):
-    columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC"]
+    columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC", "Make", "Model"]
     search_string = ' '.join(str(item_data.get(col, '')) for col in columns_to_concat if item_data.get(col))
     return search_string
 
@@ -170,7 +170,7 @@ def fetch_ebay_demand(items_data):
             print(f"Error processing item {item}: {e}")
 
     try:
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=17) as executor:
             futures = [executor.submit(process_item, item) for item in items_data]
             
             for future in as_completed(futures):

@@ -2,10 +2,10 @@
 
 function setup_env() {
     # Create a new virtual environment in the 'venv' directory
-    python3 -m venv venv
+    python3 -m venv max_venv
 
     # Activate the virtual environment
-    source venv/bin/activate
+    source max_venv/bin/activate
 
     # Install all dependencies from requirements.txt
     pip install -r requirements.txt
