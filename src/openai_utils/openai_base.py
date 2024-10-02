@@ -14,7 +14,7 @@ import os
 def gen_message_record(role, content):
     return {
         "role": role,
-        "content": content
+        "content": str(content)
     }
 
 def gen_user_message_record(content):
@@ -91,7 +91,17 @@ def openai_returns_ebay_search_string(auction_data, item_data):
     message2 = gen_user_message_record(item_data)
     messages = [message1, message2]
     response_content = fetch_openai_json(ebay_search_string_schema, messages)
-    return response_content
+
+    if "ok" not in response_content or "search_string" not in response_content:
+        raise ValueError("openai_returns_ebay_search_string response content must contain both 'ok' and 'search_string' keys.")
+
+    ok = response_content["ok"]
+    search_string = response_content["search_string"]
+
+    if ok == "false":
+        return ""
+
+    return search_string
 
 def openai_returns_formatted_auction_data(auction_data_el, description_el, shipping_el):
     message1 = gen_user_message_record(auction_data_el)

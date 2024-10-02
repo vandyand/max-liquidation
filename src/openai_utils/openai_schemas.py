@@ -18,13 +18,18 @@ ebay_sold_items_schema = {
             "ebay_item_sold_date": {
                 "type": "string",
                 "description": "Date when the item was sold on eBay"
+            },
+            "ebay_item_likeness_score": {
+                "type": "integer",
+                "description": "Integer score between 0 and 100 that represents how similar the ebay item is to the auction item. 0 means not similar at all, 100 means exact match."
             }
         },
         "required": [
             "ebay_item_name",
             "ebay_item_price",
             "ebay_item_condition",
-            "ebay_item_sold_date"
+            "ebay_item_sold_date",
+            "ebay_item_likeness_score"
         ]
     }
 }
@@ -32,12 +37,16 @@ ebay_sold_items_schema = {
 ebay_search_string_schema = {
     "type": "object",
     "properties": {
+        "ok": {
+            "type": "boolean",
+            "description": "Whether the search string is valid. If item data is not enough to create a search string, return false"
+        },
         "search_string": {
             "type": "string",
-            "description": "Search string to use for finding recently sold eBay items."
+            "description": "Search string to use for finding recently sold eBay items. Return empty string if search string is not valid. Try to optimize the search string for finding highly similar items. In general, shorter search strings are better."
         }
     },
-    "required": ["search_string"]
+    "required": ["ok", "search_string"]
 }
 
 auction_schema = {

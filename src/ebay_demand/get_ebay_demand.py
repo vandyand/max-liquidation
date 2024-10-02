@@ -15,7 +15,7 @@ import string
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from db.db_utils import create_crud_functions
-from openai_utils.openai_base import opanai_returns_formatted_ebay_demand_data
+from openai_utils.openai_base import opanai_returns_formatted_ebay_demand_data, openai_returns_ebay_search_string
 import urllib.parse
 import diskcache as dc
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -67,10 +67,9 @@ def scrape_ebay_demand_el(item_search_url):
     finally:
         driver.quit()
 
-def create_search_string(item_data):
-    columns_to_concat = ["ASIN", "Description", "FNSku", "Product", "UPC", "Make", "Model"]
-    search_string = ' '.join(str(item_data.get(col, '')) for col in columns_to_concat if item_data.get(col))
-    return search_string
+def create_search_string(auction_data,item_data):
+    openai_response = openai_returns_ebay_search_string(auction_data, item_data)
+    return openai_response
 
 def format_and_save_ebay_demand_items(ebay_demand_el, ebay_demand_crud, item, search_url, search_string):
     formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
@@ -141,14 +140,14 @@ if __name__ == '__main__':
 def generate_random_id(length=16):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-def fetch_ebay_demand(items_data):
+def fetch_ebay_demand(auction_data, items_data):
     print(f"Fetching eBay demand data for items: {items_data}")
     
     ebay_demand_data = []
     
     def process_item(item):
         try:
-            search_string = create_search_string(item)
+            search_string = openai_returns_ebay_search_string(auction_data, item)
             
             if search_string:
                 search_url = f"https://www.ebay.com/sch/i.html?_nkw={urllib.parse.quote(search_string)}&LH_Sold=1&LH_Complete=1"

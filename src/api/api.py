@@ -65,18 +65,14 @@ def process_auction(auction_id):
         print(f"Items data: {items_data}")
         if items_data is None:
             raise ValueError("Items data not found")
-        
-        ebay_demand_data = fetch_ebay_demand(items_data)
-        
+                
         # Replace NaN values with None
         auction_data = replace_nan_with_none(auction_data)
         items_data = replace_nan_with_none(items_data)
-        ebay_demand_data = replace_nan_with_none(ebay_demand_data)
         
         return {
             "auction_data": auction_data,
-            "items_data": items_data,
-            "ebay_demand_data": ebay_demand_data
+            "items_data": items_data
         }
     finally:
         if conn:
@@ -93,6 +89,39 @@ def process_auction_endpoint(request: AuctionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class EbayDemandRequest(BaseModel):
+    items_data: list
+    auction_data: dict
+
+class EbayDemandItem(BaseModel):
+    ebay_item_name: str
+    ebay_item_price: str
+    ebay_item_condition: str
+    ebay_item_sold_date: str
+    ebay_item_likeness_score: int
+    id: str
+    item_id: str
+    auction_id: str
+    url: str
+    search_string: str
+
+class EbayDemandResponse(BaseModel):
+    ebay_demand_data: list[EbayDemandItem]
+
+def process_ebay_demand(auction_data, items_data):
+    ebay_demand_data = fetch_ebay_demand(auction_data, items_data)
+    ebay_demand_data = replace_nan_with_none(ebay_demand_data)
+    return ebay_demand_data
+
+@app.post("/process_ebay_demand", response_model=EbayDemandResponse)
+def process_ebay_demand_endpoint(request: EbayDemandRequest):
+    try:
+        items_data = request.items_data
+        auction_data = request.auction_data
+        ebay_demand_data = process_ebay_demand(auction_data, items_data)
+        return EbayDemandResponse(ebay_demand_data=ebay_demand_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
