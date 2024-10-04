@@ -52,7 +52,26 @@ def replace_nan_with_none(data):
     else:
         return data
 
-# Main process function
+import hashlib
+
+def consolidate_items_data(items_data):
+    hashed_items_data = {}
+    for item in items_data:
+        sans_qty_id = {key: value for key, value in item.items() if key.lower() not in ["qty", "quantity", "id"]}
+        item_hash = hashlib.sha256(str(sans_qty_id).encode()).hexdigest()
+        
+        # Combine items with the same hash
+        if item_hash in hashed_items_data:
+            hashed_items_data[item_hash]['Qty'] += item.get('Qty', 0)  # Update quantity
+        else:
+            # item['hash'] = item_hash
+            hashed_items_data[item_hash] = item  # Add new item with hash
+
+    consolidated_items_data = list(hashed_items_data.values()) 
+    return consolidated_items_data
+
+
+# Main process function 
 def process_auction(auction_id):
     conn = create_db_connection()
     auction_url = f"https://www.liquidation.com/auction/view?id={auction_id}"
@@ -66,13 +85,15 @@ def process_auction(auction_id):
         if items_data is None:
             raise ValueError("Items data not found")
                 
+        consolidated_items_data = consolidate_items_data(items_data)
+
         # Replace NaN values with None
         auction_data = replace_nan_with_none(auction_data)
-        items_data = replace_nan_with_none(items_data)
+        consolidated_items_data = replace_nan_with_none(consolidated_items_data)
         
         return {
             "auction_data": auction_data,
-            "items_data": items_data
+            "items_data": consolidated_items_data
         }
     finally:
         if conn:
@@ -116,10 +137,8 @@ def item_score(ebay_demand_item):
     return max(score, 0)
 
 def calculate_ebay_demand_items_score(ebay_demand_data):
-    ebay_demand_item_scores = []
-    for ebay_demand_item in ebay_demand_data:
-        ebay_demand_item_scores.append(item_score(ebay_demand_item))
-    
+    ebay_demand_item_scores = [item_score(ebay_demand_item) for ebay_demand_item in ebay_demand_data]
+
     if len(ebay_demand_item_scores) == 0:
         return 0
     
