@@ -62,6 +62,7 @@
               <th class="p-2 border">ebay_item_price</th>
               <th class="p-2 border">ebay_item_condition</th>
               <th class="p-2 border">ebay_item_sold_date</th>
+              <th class="p-2 border">ebay_item_sold_days_ago</th>
               <th class="p-2 border">ebay_item_likeness_score</th>
               <th class="p-2 border">id</th>
               <th class="p-2 border">item_id</th>
@@ -180,6 +181,11 @@
           th.className = "p-2 border";
           th.innerHTML = "Actions";
           itemsDataHeader.appendChild(th);
+          // Add a header for the Item Score column
+          var th = document.createElement("th");
+          th.className = "p-2 border";
+          th.innerHTML = "Item Score";
+          itemsDataHeader.appendChild(th);
         }
 
         items_data.forEach(function (item) {
@@ -195,15 +201,21 @@
           var fetchButton = document.createElement("button");
           fetchButton.innerHTML = "Fetch eBay Data";
           fetchButton.id = item.id;
+          fetchButton.className = "bg-blue-500 text-white px-4 py-2 rounded";
           fetchButton.onclick = function () {
-            fetchEbayDemandDataForItem(item.id);
+            fetchEbayDemandDataForItem(item.id, row); // Pass the row to update the score
             console.log("Fetching eBay data for item:", item);
           };
           buttonCell.appendChild(fetchButton);
+
+          // Add a cell for Item Score initialized to "N/A"
+          var scoreCell = row.insertCell();
+          scoreCell.className = "p-2 border";
+          scoreCell.innerHTML = "N/A"; // Initialize with "N/A"
         });
       }
 
-      function fetchEbayDemandDataForItem(itemId) {
+      function fetchEbayDemandDataForItem(itemId, row) {
         fetch("http://localhost:8000/process_ebay_demand", {
           method: "POST",
           headers: {
@@ -218,6 +230,9 @@
           .then((data) => {
             console.log("Ebay Demand Data for item:", data);
             ebay_demand_data = [...ebay_demand_data, ...data.ebay_demand_data];
+            // Update the Item Score cell with the fetched ebay_demand_score
+            var scoreCell = row.cells[row.cells.length - 1]; // Get the last cell (Item Score)
+            scoreCell.innerHTML = data.ebay_demand_score.toFixed(2);
             displayEbayDemandData();
           })
           .catch((error) => {

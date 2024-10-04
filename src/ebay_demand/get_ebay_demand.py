@@ -36,6 +36,7 @@ ebay_demand_el_cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_de
 
 def scrape_ebay_demand_el(item_search_url):
     if item_search_url in ebay_demand_el_cache:
+        print(f"Ebay demand element cache hit for item {item_search_url}")
         return ebay_demand_el_cache[item_search_url]
 
     driver = setup_driver()
@@ -140,6 +141,15 @@ if __name__ == '__main__':
 def generate_random_id(length=16):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
+from dateutil import parser
+from datetime import datetime
+
+def sold_days_ago(ebay_item_sold_date):
+    # Use dateutil.parser to parse the date string
+    sold_date = parser.parse(ebay_item_sold_date)
+    today = datetime.now()  # Use datetime to get the current date and time
+    return (today - sold_date).days
+
 def fetch_ebay_demand(auction_data, items_data):
     print(f"Fetching eBay demand data for items: {items_data}")
     
@@ -152,7 +162,7 @@ def fetch_ebay_demand(auction_data, items_data):
             if search_string:
                 search_url = f"https://www.ebay.com/sch/i.html?_nkw={urllib.parse.quote(search_string)}&LH_Sold=1&LH_Complete=1"
                 print(f"Getting eBay demand data for {search_url}")
-                
+
                 ebay_demand_el = scrape_ebay_demand_el(search_url)
                 
                 if ebay_demand_el:
@@ -164,6 +174,7 @@ def fetch_ebay_demand(auction_data, items_data):
                         ebay_item['auction_id'] = item['auction_id']
                         ebay_item['url'] = search_url
                         ebay_item['search_string'] = search_string
+                        ebay_item['ebay_item_sold_days_ago'] = sold_days_ago(ebay_item['ebay_item_sold_date'])
                         ebay_demand_data.append(ebay_item)
         except Exception as e:
             print(f"Error processing item {item}: {e}")

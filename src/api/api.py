@@ -98,6 +98,7 @@ class EbayDemandItem(BaseModel):
     ebay_item_price: str
     ebay_item_condition: str
     ebay_item_sold_date: str
+    ebay_item_sold_days_ago: int
     ebay_item_likeness_score: int
     id: str
     item_id: str
@@ -105,23 +106,41 @@ class EbayDemandItem(BaseModel):
     url: str
     search_string: str
 
+
 class EbayDemandResponse(BaseModel):
     ebay_demand_data: list[EbayDemandItem]
+    ebay_demand_score: float
+
+def item_score(ebay_demand_item):
+    score = (90 - ebay_demand_item['ebay_item_sold_days_ago']) * ebay_demand_item['ebay_item_likeness_score']
+    return max(score, 0)
+
+def calculate_ebay_demand_items_score(ebay_demand_data):
+    ebay_demand_item_scores = []
+    for ebay_demand_item in ebay_demand_data:
+        ebay_demand_item_scores.append(item_score(ebay_demand_item))
+    
+    if len(ebay_demand_item_scores) == 0:
+        return 0
+    
+    return (sum(ebay_demand_item_scores) + len(ebay_demand_item_scores)) / len(ebay_demand_item_scores)
 
 def process_ebay_demand(auction_data, items_data):
     ebay_demand_data = fetch_ebay_demand(auction_data, items_data)
     ebay_demand_data = replace_nan_with_none(ebay_demand_data)
-    return ebay_demand_data
+    ebay_demand_score = calculate_ebay_demand_items_score(ebay_demand_data)
+    return ebay_demand_data, ebay_demand_score
 
 @app.post("/process_ebay_demand", response_model=EbayDemandResponse)
 def process_ebay_demand_endpoint(request: EbayDemandRequest):
     try:
         items_data = request.items_data
         auction_data = request.auction_data
-        ebay_demand_data = process_ebay_demand(auction_data, items_data)
-        return EbayDemandResponse(ebay_demand_data=ebay_demand_data)
+        ebay_demand_data, ebay_demand_score = process_ebay_demand(auction_data, items_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"An error occurred while processing eBay demand: {str(e)}")
+
+    return EbayDemandResponse(ebay_demand_data=ebay_demand_data, ebay_demand_score=ebay_demand_score)
 
 if __name__ == "__main__":
     import uvicorn

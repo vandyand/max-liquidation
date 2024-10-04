@@ -107,6 +107,11 @@ if __name__ == '__main__':
 def generate_random_id(length=16):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
+import diskcache as dc
+
+auction_items_cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'auction_items_cache'))
+
+@auction_items_cache.memoize()
 def fetch_auction_items(auction_id):
     driver = setup_driver()
     try:

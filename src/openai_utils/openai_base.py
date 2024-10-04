@@ -86,9 +86,19 @@ def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
 
     return ret
 
+import hashlib
+
+ebay_search_string_cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_search_string_cache'))
+
 def openai_returns_ebay_search_string(auction_data, item_data):
-    message1 = gen_user_message_record(auction_data)
-    message2 = gen_user_message_record(item_data)
+
+    inputs_hash = hashlib.sha256(str(item_data).encode()).hexdigest()
+
+    if inputs_hash in ebay_search_string_cache:
+        return ebay_search_string_cache[inputs_hash]
+
+    message1 = gen_user_message_record("Here is the auction data for context: " + str(auction_data))
+    message2 = gen_user_message_record("Here is the item data to create a search string for: " + str(item_data))
     messages = [message1, message2]
     response_content = fetch_openai_json(ebay_search_string_schema, messages)
 
@@ -99,7 +109,10 @@ def openai_returns_ebay_search_string(auction_data, item_data):
     search_string = response_content["search_string"]
 
     if ok == "false":
+        ebay_search_string_cache[inputs_hash] = ""
         return ""
+
+    ebay_search_string_cache[inputs_hash] = search_string
 
     return search_string
 
