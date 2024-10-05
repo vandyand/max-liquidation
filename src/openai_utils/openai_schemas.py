@@ -1,37 +1,45 @@
 ebay_sold_items_schema = {
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "ebay_item_name": {
-                "type": "string",
-                "description": "Name of the item on eBay"
-            },
-            "ebay_item_price": {
-                "type": "string",
-                "description": "Price of the item on eBay"
-            },
-            "ebay_item_condition": {
-                "type": "string",
-                "description": "Condition of the item on eBay (brand new, used, open box, etc.)"
-            },
-            "ebay_item_sold_date": {
-                "type": "string",
-                "description": "Date when the item was sold on eBay"
-            },
-            "ebay_item_likeness_score": {
-                "type": "integer",
-                "description": "Integer score between 0 and 100 that represents how similar the ebay item is to the auction item. 0 means not similar at all, 100 means exact match."
+    "type": "object",
+    "properties": {
+        "ebay_sold_items": {
+            "type": "array",
+            "description": "Array of eBay sold items",
+            "items": {
+                "type": "object",
+                "description": "Single eBay sold item",
+                "properties": {
+                    "ebay_item_name": {
+                        "type": "string",
+                        "description": "Name of the item on eBay"
+                    },
+                    "ebay_item_price": {
+                        "type": "number",
+                        "description": "Two-decimal-place price of the item on eBay. Of form 123.45 representing USD amount. If price is integer, return it as 123.00"
+                    },
+                    "ebay_item_condition": {
+                        "type": "string",
+                        "description": "Condition of the item on eBay (brand new, used, open box, etc.)"
+                    },
+                    "ebay_item_sold_date": {
+                        "type": "string",
+                        "description": "Date when the item was sold on eBay"
+                    },
+                    "ebay_item_likeness_score": {
+                        "type": "integer",
+                        "description": "Integer score between 0 and 100 that represents how similar the ebay item is to the auction item. 0 means not similar at all, 100 means exact match."
+                    }
+                },
+                "required": [
+                    "ebay_item_name",
+                    "ebay_item_price",
+                    "ebay_item_condition",
+                    "ebay_item_sold_date",
+                    "ebay_item_likeness_score"
+                ]
             }
-        },
-        "required": [
-            "ebay_item_name",
-            "ebay_item_price",
-            "ebay_item_condition",
-            "ebay_item_sold_date",
-            "ebay_item_likeness_score"
-        ]
-    }
+        }
+    },
+    "required": ["ebay_sold_items"]
 }
 
 ebay_search_string_schema = {

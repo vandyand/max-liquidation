@@ -116,7 +116,7 @@ class EbayDemandRequest(BaseModel):
 
 class EbayDemandItem(BaseModel):
     ebay_item_name: str
-    ebay_item_price: str
+    ebay_item_price: float
     ebay_item_condition: str
     ebay_item_sold_date: str
     ebay_item_sold_days_ago: int
@@ -132,8 +132,8 @@ class EbayDemandResponse(BaseModel):
     ebay_demand_data: list[EbayDemandItem]
     ebay_demand_score: float
 
-def item_score(ebay_demand_item):
-    score = (90 - ebay_demand_item['ebay_item_sold_days_ago']) * ebay_demand_item['ebay_item_likeness_score']
+def item_score(ebay_demand_item) -> float:
+    score = (90 - ebay_demand_item['ebay_item_sold_days_ago']) * ebay_demand_item['ebay_item_likeness_score'] * ebay_demand_item['ebay_item_price']
     return max(score, 0)
 
 def calculate_ebay_demand_items_score(ebay_demand_data):

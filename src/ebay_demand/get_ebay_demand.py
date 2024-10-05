@@ -73,7 +73,7 @@ def create_search_string(auction_data,item_data):
     return openai_response
 
 def format_and_save_ebay_demand_items(ebay_demand_el, ebay_demand_crud, item, search_url, search_string):
-    formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
+    formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el, item, search_url)
     # print(f"Inserting eBay demand data for item {item}")
     for ebay_item in formatted_ebay_items:
         ebay_item['item_id'] = item[0]
@@ -166,7 +166,7 @@ def fetch_ebay_demand(auction_data, items_data):
                 ebay_demand_el = scrape_ebay_demand_el(search_url)
                 
                 if ebay_demand_el:
-                    formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el)
+                    formatted_ebay_items = opanai_returns_formatted_ebay_demand_data(ebay_demand_el, item, search_url)
                     
                     for ebay_item in formatted_ebay_items:
                         ebay_item['id'] = generate_random_id()

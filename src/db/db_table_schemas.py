@@ -53,9 +53,10 @@ ebay_demand_data_table_schema = '''
         search_string TEXT,
         url TEXT,
         ebay_item_name TEXT,
-        ebay_item_price TEXT,
+        ebay_item_price REAL,
         ebay_item_condition TEXT,
         ebay_item_sold_date TEXT,
+        ebay_item_sold_days_ago INTEGER,
         ebay_item_likeness_score INTEGER,
         FOREIGN KEY (auction_id) REFERENCES auction_data(auction_id),
         FOREIGN KEY (item_id) REFERENCES items_data(id)

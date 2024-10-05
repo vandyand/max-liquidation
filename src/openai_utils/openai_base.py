@@ -61,20 +61,24 @@ def fetch_openai_json(json_schema, messages_arg):
 
 cache = dc.Cache(os.path.join(os.path.dirname(__file__), 'ebay_demand_cache'))
 
-def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
+def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el, target_item, search_url):
     ret = None
 
-    # Generate sha256 hash of ebay_sold_items_el
-    sha256_key = hashlib.sha256(ebay_sold_items_el.encode('utf-8')).hexdigest()
-
     # Check if the result is already in the cache
-    if sha256_key in cache:
-        return cache[sha256_key]
+    if search_url in cache:
+        return cache[search_url]
 
-    response_content = fetch_openai_json(ebay_sold_items_schema, [ebay_sold_items_el, "\n\nPlease return json response with 'items' key according to schema. Value should be an array of 'ebay sold item' records"])
+    response_content = fetch_openai_json(
+        ebay_sold_items_schema, 
+        [ebay_sold_items_el, 
+         str( "\n\nHere is the target item data. We're searching for items similar to this one: ", str(target_item)),
+         str("\n\nHere is the search url the ebay html data was fetched from: ", search_url),
+         str("\n\nPlease return json response with 'ebay_sold_items' key where value is an array of 'ebay sold item' records according to schema. ",
+         "Some of the items in the html do not match the target item we're searching for and should be ignored. ",
+         "Others match slightly and should be included with a lower likeness score. ")])
     
-    if response_content and "items" in response_content:
-        ret = response_content["items"]
+    if response_content and "ebay_sold_items" in response_content:
+        ret = response_content["ebay_sold_items"]
     elif response_content and "data" in response_content:
         ret = response_content["data"]
     else:
@@ -82,7 +86,7 @@ def opanai_returns_formatted_ebay_demand_data(ebay_sold_items_el):
         raise Exception(f"Unexpected response structure: {response_content}")
 
     # Store the result in the cache
-    cache[sha256_key] = ret
+    cache[search_url] = ret
 
     return ret
 
